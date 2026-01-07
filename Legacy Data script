@@ -1,142 +1,154 @@
-const fs = require("fs");
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
 
-/* ================= CONFIG ================= */
-const USERS = 12000;
-const SHOPS = 800;
-const PRODUCTS = 3000;
-const VARIANTS_PER_PRODUCT = 4;
-const ORDERS = 20000;
+public class LegacyEcommerceDataGenerator {
 
-/* ================= UTILS ================= */
-const rand = (min, max) =>
-  Math.floor(Math.random() * (max - min + 1)) + min;
+    static Random random = new Random();
 
-const pick = (arr) => arr[rand(0, arr.length - 1)];
+    static String[] colors = {"RED", "BLUE", "BLACK", "WHITE", "GREEN"};
+    static String[] sizes = {"S", "M", "L", "XL"};
+    static String[] statuses = {"ACTIVE", "BLOCKED", "BANNED"};
+    static String[] delimiters = {"|", ",", ";"};
 
-const legacyDate = () => {
-  const formats = [
-    () => `${rand(1,28)}/${rand(1,12)}/2023`,
-    () => `2023-${rand(1,12)}-${rand(1,28)}`,
-    () => `${rand(1,28)}-${rand(1,12)}-23`,
-    () => "INVALID_DATE"
-  ];
-  return pick(formats)();
-};
+    public static void main(String[] args) throws IOException {
+        BufferedWriter writer = new BufferedWriter(
+                new FileWriter("legacy_ecommerce_data.txt"));
 
-/* ================= USERS ================= */
-const users = [];
-for (let i = 1; i <= USERS; i++) {
-  users.push({
-    user_id: i,
-    username: `user_${i}`,
-    phone: i % 50 === 0 ? null : `09${rand(10000000, 99999999)}`,
-    is_active: pick([0, 1, "Y", "N"]),
-    deleted_flag: i % 120 === 0 ? "Y" : "N",
-    created_at: legacyDate()
-  });
+        int TOTAL_LINES = 12000;
+
+        for (int i = 1; i <= TOTAL_LINES; i++) {
+            int type = random.nextInt(6);
+
+            String line;
+            switch (type) {
+                case 0:
+                    line = genUser(i);
+                    break;
+                case 1:
+                    line = genShop(i);
+                    break;
+                case 2:
+                    line = genProduct(i);
+                    break;
+                case 3:
+                    line = genOrder(i);
+                    break;
+                case 4:
+                    line = genOrderItem(i);
+                    break;
+                default:
+                    line = genVoucher(i);
+            }
+
+            // 10% dòng bị cắt nửa (legacy crash)
+            if (random.nextInt(10) == 0) {
+                line = line.substring(0, random.nextInt(line.length() / 2 + 1));
+            }
+
+            writer.write(line);
+            writer.newLine();
+        }
+
+        writer.close();
+        System.out.println("Generated legacy_ecommerce_data.txt");
+    }
+
+    static String d() {
+        return delimiters[random.nextInt(delimiters.length)];
+    }
+
+    static String genUser(int i) {
+        String delim = d();
+
+        // thiếu field email (lỗi)
+        if (random.nextInt(8) == 0) {
+            return "USER" + delim + "u" + i + delim + "Nguyen Van " + i;
+        }
+
+        return "USER" + delim +
+                "u" + i + delim +
+                "User_" + i + delim +
+                "user" + i + "@mail.com" + delim +
+                statuses[random.nextInt(statuses.length)];
+    }
+
+    static String genShop(int i) {
+        String delim = d();
+
+        return "SHOP" + delim +
+                "s" + i + delim +
+                "Shop_" + i + delim +
+                (random.nextBoolean() ? "ACTIVE" : "INACTIVE");
+    }
+
+    static String genProduct(int i) {
+        String delim = d();
+
+        // giá bị text (lỗi)
+        String price = random.nextInt(10) == 0 ? "abc"
+                : String.valueOf(10000 + random.nextInt(500000));
+
+        // tồn kho âm (lỗi)
+        int stock = random.nextInt(10) == 0 ? -random.nextInt(20)
+                : random.nextInt(500);
+
+        return "PRODUCT" + delim +
+                "p" + i + delim +
+                "s" + random.nextInt(200) + delim +
+                "Product_" + i + delim +
+                colors[random.nextInt(colors.length)] + delim +
+                sizes[random.nextInt(sizes.length)] + delim +
+                price + delim +
+                stock;
+    }
+
+    static String genOrder(int i) {
+        String delim = d();
+
+        // ngày sai format
+        String date = random.nextInt(6) == 0
+                ? "2025-13-45"
+                : "2025-01-" + (1 + random.nextInt(28));
+
+        return "ORDER" + delim +
+                "o" + i + delim +
+                "u" + random.nextInt(1000) + delim +
+                "s" + random.nextInt(200) + delim +
+                date + delim +
+                (random.nextBoolean() ? "FLASHSALE" : "NORMAL");
+    }
+
+    static String genOrderItem(int i) {
+        String delim = d();
+
+        // số lượng âm hoặc 0 (lỗi logic)
+        int qty = random.nextInt(7) == 0 ? -random.nextInt(5)
+                : 1 + random.nextInt(5);
+
+        return "ORDER_ITEM" + delim +
+                "o" + random.nextInt(3000) + delim +
+                "p" + random.nextInt(2000) + delim +
+                colors[random.nextInt(colors.length)] + delim +
+                sizes[random.nextInt(sizes.length)] + delim +
+                qty + delim +
+                (10000 + random.nextInt(300000));
+    }
+
+    static String genVoucher(int i) {
+        String delim = d();
+
+        // discount > 100% (lỗi)
+        int discount = random.nextInt(8) == 0
+                ? 150
+                : 5 + random.nextInt(50);
+
+        return "VOUCHER" + delim +
+                "v" + i + delim +
+                "FLASH_" + i + delim +
+                discount + delim +
+                (random.nextBoolean() ? "STACKABLE" : "EXCLUSIVE");
+    }
 }
 
-/* ================= SHOPS ================= */
-const shops = [];
-for (let i = 1; i <= SHOPS; i++) {
-  shops.push({
-    shop_id: i,
-    shop_name: `SHOP_${i}`,
-    owner_user_id: rand(1, USERS),
-    rating_avg: i % 40 === 0 ? 7.8 : (Math.random() * 5).toFixed(2), // rating > 5
-    is_official: pick([0, 1, "true", "false"]),
-    created_at: legacyDate()
-  });
-}
-
-/* ================= PRODUCTS ================= */
-const products = [];
-for (let i = 1; i <= PRODUCTS; i++) {
-  products.push({
-    product_id: i,
-    shop_id: rand(1, SHOPS),
-    product_name: `PRODUCT_${i}`,
-    base_price:
-      i % 55 === 0 ? -1000 : rand(10000, 500000), // price âm
-    is_flash_sale: pick([0, 1, "Y", "N"]),
-    created_at: legacyDate()
-  });
-}
-
-/* ================= VARIANTS ================= */
-const variants = [];
-let variantId = 1;
-
-products.forEach((p) => {
-  for (let i = 0; i < VARIANTS_PER_PRODUCT; i++) {
-    variants.push({
-      variant_id: variantId++,
-      product_id:
-        variantId % 97 === 0 ? 999999 : p.product_id, // product không tồn tại
-      size: pick(["S", "M", "L", null]),
-      color: pick(["RED", "BLUE", "BLACK", "???"]),
-      stock_qty:
-        variantId % 45 === 0 ? -5 : rand(0, 100), // kho âm
-      price_override:
-        variantId % 60 === 0 ? 0 : rand(8000, 450000),
-      legacy_stock_flag: pick([0, 1, "Y", "N"])
-    });
-  }
-});
-
-/* ================= VOUCHERS ================= */
-const vouchers = [];
-for (let i = 1; i <= 500; i++) {
-  vouchers.push({
-    voucher_code: `VC_${i}`,
-    discount_type: pick(["PERCENT", "FIXED", "UNKNOWN"]),
-    discount_value: i % 30 === 0 ? 150 : rand(5, 50), // percent > 100
-    min_order_value: rand(0, 300000),
-    max_discount: rand(0, 200000),
-    is_stackable: pick([0, 1, "Y", "N"]),
-    expired_at: legacyDate()
-  });
-}
-
-/* ================= ORDERS (FLASH SALE CHAOS) ================= */
-const orders = [];
-for (let i = 1; i <= ORDERS; i++) {
-  const product = pick(products);
-  const variant = pick(variants);
-
-  orders.push({
-    order_id: i,
-    user_id:
-      i % 88 === 0 ? 999999 : rand(1, USERS), // user không tồn tại
-    shop_id: product.shop_id,
-    product_id: product.product_id,
-    variant_id:
-      i % 77 === 0 ? 888888 : variant.variant_id, // variant không tồn tại
-    qty:
-      i % 66 === 0 ? 999 : rand(1, 5), // oversell
-    price_at_time:
-      i % 44 === 0 ? -5000 : variant.price_override,
-    voucher_used:
-      i % 3 === 0 ? pick(vouchers).voucher_code : "INVALID_VOUCHER",
-    order_status: pick([
-      "CREATED",
-      "PAID",
-      "CANCELLED",
-      "UNKNOWN"
-    ]),
-    order_time:
-      product.is_flash_sale == 1
-        ? "01/12/2023 20:00" // flash sale cùng thời điểm
-        : legacyDate()
-  });
-}
-
-/* ================= WRITE FILES ================= */
-fs.writeFileSync("legacy-users.json", JSON.stringify(users, null, 2));
-fs.writeFileSync("legacy-shops.json", JSON.stringify(shops, null, 2));
-fs.writeFileSync("legacy-products.json", JSON.stringify(products, null, 2));
-fs.writeFileSync("legacy-variants.json", JSON.stringify(variants, null, 2));
-fs.writeFileSync("legacy-vouchers.json", JSON.stringify(vouchers, null, 2));
-fs.writeFileSync("legacy-orders.json", JSON.stringify(orders, null, 2));
-
-console.log("💣 Broken legacy e-commerce dataset generated");
