@@ -1,138 +1,350 @@
-Đúng như giảng viên của bạn nói, con số 10.000 dòng đối với Database là rất nhỏ. Nếu dùng vòng lặp (Loop) trong SQL thì máy tính chỉ chạy mất khoảng 3-5 giây là xong.
+2.1. E-Commerce Simulation (Mô hình Shopee/Lazada)
 
-Để đáp ứng đúng tiêu chí: "Tổng hợp nhiều bảng" và "Có dữ liệu bẩn", mình sẽ viết cho bạn một Script SQL mới. Script này sẽ tạo ra một hệ sinh thái dữ liệu giả lập hệ thống cũ gồm 3 bảng liên kết nhau:
+Thực thể: User, Shop, Product (với nhiều biến thể Size/Màu), Order, Voucher.
 
-Legacy_Users (Khách hàng cũ): 2.000 dòng.
+Thách thức: Xử lý giỏ hàng, tính toán khuyến mãi chồng chéo, logic tồn kho biến thể.
 
-Legacy_Products (Sản phẩm cũ): 2.000 dòng.
+Simulator: Giả lập "Flash Sale" - hàng nghìn user cùng đặt hàng một lúc, hệ thống phải trừ kho chính xác.
 
-Legacy_Orders (Đơn hàng cũ): 6.000 dòng. => Tổng cộng: 10.000 dòng. (Đúng chỉ tiêu).
+Chào bạn, chúng ta sẽ bắt đầu lại từ đầu với chủ đề E-Commerce Simulation này. Đây là đề tài khó nhất nhưng cũng dễ lấy điểm tuyệt đối nhất nếu bạn làm rõ được phần "Biến thể (Variants)" và "Flash Sale".
 
-Trong đó, mình sẽ cài cắm 5-10% lỗi (Email sai, Số điện thoại thiếu, Giá âm...) để bạn có cái mà xử lý khi Import.
+Dưới đây là quy trình thực hiện trọn gói: Từ thiết kế Database chuẩn đến Code giả lập Flash Sale.
 
-Shutterstock
+1. Thiết kế Database (Giải quyết bài toán Biến thể)
+Sai lầm lớn nhất của sinh viên là để cột Quantity (Số lượng) ở bảng Product. Thực tế: Áo thun (Product) có thể còn màu Đỏ nhưng hết màu Xanh. => Giải pháp: Tách thành 2 bảng Products (thông tin chung) và Product_Variants (thông tin SKU cụ thể).
 
-Script SQL Server: Sinh 10.000 dòng dữ liệu (Chạy 1 lần là đủ)
-Bạn copy toàn bộ đoạn này vào SQL Server Management Studio (SSMS) và bấm Execute (F5).
+Cấu trúc các file CSV cần tạo:
 
-SQL
+shops.csv: ID, Tên Shop, Đánh giá.
 
-USE ShopeeDB; -- Nhớ đổi tên Database của bạn
-GO
+users.csv: ID, Tên, Ví tiền.
 
--- =============================================
--- 1. TẠO CÁC BẢNG TẠM (LEGACY SYSTEM)
--- =============================================
--- Bảng Khách hàng cũ (Chứa rác: Email sai, SĐT thiếu số)
-CREATE TABLE Legacy_Users (
-    UserID INT IDENTITY(1,1) PRIMARY KEY,
-    Raw_Fullname NVARCHAR(100),
-    Raw_Email NVARCHAR(100),
-    Raw_Phone NVARCHAR(20)
-);
+products.csv: ID, Tên chung (VD: iPhone 15), Mô tả.
 
--- Bảng Sản phẩm cũ (Chứa rác: Giá âm, Tên rỗng)
-CREATE TABLE Legacy_Products (
-    ProdID INT IDENTITY(1,1) PRIMARY KEY,
-    Raw_Name NVARCHAR(255),
-    Raw_Price NVARCHAR(50), -- Để NVARCHAR để chứa được chữ cái rác
-    Raw_Stock INT
-);
+product_variants.csv: Variant_ID, Product_ID, Màu, Size, Tồn kho (Stock), Giá.
 
--- Bảng Đơn hàng cũ (Liên kết User và Product)
-CREATE TABLE Legacy_Orders (
-    OrderID INT IDENTITY(1,1) PRIMARY KEY,
-    UserID INT, -- Khóa ngoại giả (tham chiếu Legacy_Users)
-    ProdID INT, -- Khóa ngoại giả (tham chiếu Legacy_Products)
-    OrderDate DATE,
-    Quantity INT
-);
-GO
+vouchers.csv: Mã, Loại (Giảm tiền/%, Freeship), Điều kiện (Đơn tối thiểu).
 
--- =============================================
--- 2. SCRIPT TỰ ĐỘNG SINH DỮ LIỆU
--- =============================================
-BEGIN TRANSACTION;
-DECLARE @i INT = 1;
-DECLARE @RandomVal INT;
+orders.csv: ID đơn, User mua, Tổng tiền, Thời gian.
 
--- --- PHẦN 1: TẠO 2.000 USER (KHÁCH HÀNG) ---
-PRINT 'Đang tạo 2.000 Users...';
-SET @i = 1;
-WHILE @i <= 2000
-BEGIN
-    SET @RandomVal = ABS(CHECKSUM(NEWID())) % 100;
+order_items.csv: ID chi tiết, Order_ID, Variant_ID (Link vào biến thể), Số lượng.
+
+2. Chiến thuật giả lập "Flash Sale" (Simulator Strategy)
+Để giả lập Flash Sale trong code sinh dữ liệu, chúng ta không random lung tung. Chúng ta sẽ tạo kịch bản:
+
+Kịch bản: Shop A mở bán "iPhone 15 Pro Max - Titan Tự Nhiên" giá sốc.
+
+Kho: Chỉ có 50 cái.
+
+Người mua: 1.000 người cùng lao vào đặt lệnh.
+
+Kết quả mong đợi: 50 đơn hàng thành công, 950 đơn hàng bị hủy hoặc báo lỗi "Hết hàng".
+
+3. Code Java Triển khai (Full Script)
+Bạn tạo một file Java mới tên EcommerceSimulator.java. Code này sẽ sinh ra bộ dữ liệu >10.000 dòng thể hiện đúng kịch bản trên.
+
+Java
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+public class EcommerceSimulator {
+
+    // Cấu hình số lượng
+    static final int NUM_USERS = 2000;      // 2000 người dùng tham gia
+    static final int NUM_SHOPS = 50;        // 50 Shop
+    static final int NUM_PRODUCTS = 200;    // 200 Sản phẩm gốc
     
-    DECLARE @Name NVARCHAR(100) = 'User ' + CAST(@i AS NVARCHAR);
-    DECLARE @Email NVARCHAR(100);
-    DECLARE @Phone NVARCHAR(20);
-
-    -- Tạo lỗi Email (5%)
-    IF @RandomVal < 5 SET @Email = 'user' + CAST(@i AS NVARCHAR); -- Thiếu @gmail.com
-    ELSE SET @Email = 'user' + CAST(@i AS NVARCHAR) + '@gmail.com';
-
-    -- Tạo lỗi SĐT (5%)
-    IF @RandomVal < 5 SET @Phone = '090123'; -- Thiếu số
-    ELSE IF @RandomVal < 10 SET @Phone = 'ABC-XYZ'; -- SĐT chứa chữ
-    ELSE SET @Phone = '09' + CAST(ABS(CHECKSUM(NEWID())) % 100000000 AS NVARCHAR);
-
-    INSERT INTO Legacy_Users (Raw_Fullname, Raw_Email, Raw_Phone)
-    VALUES (@Name, @Email, @Phone);
+    // List lưu trữ ID để tạo quan hệ
+    static List<String> userIds = new ArrayList<>();
+    static List<String> shopIds = new ArrayList<>();
+    static List<String> productIds = new ArrayList<>();
+    static List<String> variantIds = new ArrayList<>();
     
-    SET @i = @i + 1;
-END
+    // Map giả lập kho hàng realtime cho Flash Sale (VariantID -> Stock)
+    static Map<String, Integer> inventoryMap = new HashMap<>();
 
--- --- PHẦN 2: TẠO 2.000 PRODUCTS (SẢN PHẨM) ---
-PRINT 'Đang tạo 2.000 Products...';
-SET @i = 1;
-WHILE @i <= 2000
-BEGIN
-    SET @RandomVal = ABS(CHECKSUM(NEWID())) % 100;
+    static Random random = new Random();
+
+    public static void main(String[] args) {
+        System.out.println("🚀 Bắt đầu giả lập hệ thống E-Commerce...");
+
+        // 1. Tạo dữ liệu nền (Master Data)
+        generateUsers();
+        generateShops();
+        generateProductsAndVariants(); // Quan trọng: Tạo hàng hóa & Kho
+        generateVouchers();
+
+        // 2. GIẢ LẬP FLASH SALE (Transaction Data)
+        // Đây là phần "Ăn điểm": Hàng nghìn người tranh nhau mua
+        simulateFlashSale(); 
+
+        System.out.println("✅ HOÀN TẤT! Dữ liệu đã được xuất ra file CSV.");
+    }
+
+    // --- CÁC HÀM SINH DỮ LIỆU NỀN ---
+
+    static void generateUsers() {
+        try (BufferedWriter writer = createWriter("users.csv")) {
+            writer.write("user_id,username,email,phone\n");
+            for (int i = 1; i <= NUM_USERS; i++) {
+                String id = "U" + i;
+                userIds.add(id);
+                writer.write(id + ",user" + i + ",user" + i + "@mail.com,090" + i + "\n");
+            }
+            System.out.println("-> Đã tạo " + NUM_USERS + " Users.");
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    static void generateShops() {
+        try (BufferedWriter writer = createWriter("shops.csv")) {
+            writer.write("shop_id,shop_name,rating\n");
+            for (int i = 1; i <= NUM_SHOPS; i++) {
+                String id = "S" + i;
+                shopIds.add(id);
+                writer.write(id + ",Shop Official " + i + "," + (3 + random.nextDouble() * 2) + "\n");
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    static void generateProductsAndVariants() {
+        try (BufferedWriter pWriter = createWriter("products.csv");
+             BufferedWriter vWriter = createWriter("product_variants.csv")) {
+            
+            pWriter.write("product_id,shop_id,product_name,description\n");
+            vWriter.write("variant_id,product_id,color,size,price,stock_qty\n");
+
+            int vCount = 1;
+            String[] products = {"iPhone 15", "Samsung S24", "Áo Hoodie", "Giày Nike", "Son Mac"};
+            String[] colors = {"Đen", "Trắng", "Titan", "Hồng", "Xanh"};
+            String[] sizes = {"S", "M", "L", "XL", "256GB", "512GB"};
+
+            for (int i = 1; i <= NUM_PRODUCTS; i++) {
+                String pId = "P" + i;
+                productIds.add(pId);
+                String sId = shopIds.get(random.nextInt(shopIds.size()));
+                String pName = products[random.nextInt(products.length)] + " " + i;
+
+                pWriter.write(pId + "," + sId + "," + pName + ",Mô tả sản phẩm xịn\n");
+
+                // Tạo biến thể (Variants) cho mỗi sản phẩm
+                int numVars = 3 + random.nextInt(3); // Mỗi SP có 3-5 biến thể
+                for (int j = 0; j < numVars; j++) {
+                    String vId = "V" + vCount++;
+                    variantIds.add(vId);
+                    
+                    String color = colors[random.nextInt(colors.length)];
+                    String size = sizes[random.nextInt(sizes.length)];
+                    double price = 100000 + random.nextInt(2000000);
+                    int stock = random.nextInt(100); // Kho ngẫu nhiên
+
+                    // Lưu vào Map để lát nữa giả lập trừ kho Flash Sale
+                    inventoryMap.put(vId, stock);
+
+                    vWriter.write(vId + "," + pId + "," + color + "," + size + "," + String.format("%.0f", price) + "," + stock + "\n");
+                }
+            }
+            System.out.println("-> Đã tạo Products & Variants (Logic tồn kho tách biệt).");
+        } catch (IOException e) { e.printStackTrace(); }
+    }
     
-    DECLARE @PName NVARCHAR(255);
-    DECLARE @PPrice NVARCHAR(50);
-    DECLARE @PStock INT;
+    static void generateVouchers() {
+        try (BufferedWriter writer = createWriter("vouchers.csv")) {
+            writer.write("voucher_id,code,discount_percent,min_order\n");
+            for(int i=1; i<=20; i++) {
+                writer.write("VC"+i + ",SALE"+i + "," + (5+random.nextInt(20)) + "," + (100000*i) + "\n");
+            }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
 
-    -- Tạo lỗi Tên và Giá (10%)
-    IF @RandomVal < 5 SET @PName = NULL; -- Tên rỗng
-    ELSE SET @PName = 'San Pham ' + CAST(@i AS NVARCHAR);
+    // --- PHẦN QUAN TRỌNG: GIẢ LẬP FLASH SALE ---
+    static void generateOrders_SimulateFlashSale() {
+        // Tên hàm cũ, đổi tên lại cho đúng logic bên dưới
+    }
 
-    IF @RandomVal < 5 SET @PPrice = '-100000'; -- Giá âm
-    ELSE IF @RandomVal < 8 SET @PPrice = 'Hai tram nghin'; -- Giá chữ
-    ELSE SET @PPrice = CAST((ABS(CHECKSUM(NEWID())) % 5000) * 1000 AS NVARCHAR);
+    static void simulateFlashSale() {
+        System.out.println("⚡ ĐANG GIẢ LẬP FLASH SALE: 1000 người cùng tranh mua 1 sản phẩm HOT...");
+        
+        try (BufferedWriter oWriter = createWriter("orders.csv");
+             BufferedWriter oiWriter = createWriter("order_items.csv")) {
+             
+            oWriter.write("order_id,user_id,total_amount,status,order_time\n");
+            oiWriter.write("item_id,order_id,variant_id,quantity,price\n");
 
-    SET @PStock = ABS(CHECKSUM(NEWID())) % 100;
+            // Kịch bản: Chọn 1 sản phẩm HOT nhất để làm Flash Sale
+            String hotVariantId = variantIds.get(0); // Lấy biến thể đầu tiên
+            int initialStock = inventoryMap.get(hotVariantId); 
+            System.out.println("   Mặt hàng HOT: " + hotVariantId + " | Tồn kho ban đầu: " + initialStock);
 
-    INSERT INTO Legacy_Products (Raw_Name, Raw_Price, Raw_Stock)
-    VALUES (@PName, @PPrice, @PStock);
+            int orderCount = 1;
+            int orderItemCount = 1;
 
-    SET @i = @i + 1;
-END
+            // 1500 lượt request mua hàng dồn dập
+            for (int i = 0; i < 1500; i++) {
+                String userId = userIds.get(random.nextInt(userIds.size()));
+                int qtyBuy = 1; // Mỗi người mua 1 cái
 
--- --- PHẦN 3: TẠO 6.000 ORDERS (ĐƠN HÀNG) ---
--- Mẹo của thầy: Lấy ID từ 2 bảng trên ghép lại -> Tăng số lượng cực nhanh
-PRINT 'Đang tạo 6.000 Orders...';
-SET @i = 1;
-WHILE @i <= 6000
-BEGIN
-    -- Random UserID từ 1 đến 2000
-    DECLARE @RandUserID INT = (ABS(CHECKSUM(NEWID())) % 2000) + 1;
-    -- Random ProdID từ 1 đến 2000
-    DECLARE @RandProdID INT = (ABS(CHECKSUM(NEWID())) % 2000) + 1;
-    
-    INSERT INTO Legacy_Orders (UserID, ProdID, OrderDate, Quantity)
-    VALUES (@RandUserID, @RandProdID, GETDATE(), 1);
+                // LOGIC KIỂM TRA TỒN KHO (Concurrency Simulation Logic)
+                String status;
+                synchronized (inventoryMap) { // Giả lập khóa (lock) kho hàng
+                    int currentStock = inventoryMap.getOrDefault(hotVariantId, 0);
+                    
+                    if (currentStock >= qtyBuy) {
+                        // Còn hàng -> Trừ kho -> Tạo đơn thành công
+                        inventoryMap.put(hotVariantId, currentStock - qtyBuy);
+                        status = "Completed";
+                    } else {
+                        // Hết hàng -> Đơn bị hủy
+                        status = "Cancelled (Out of Stock)";
+                    }
+                }
 
-    SET @i = @i + 1;
-END
+                // Ghi log đơn hàng
+                String orderId = "OD" + orderCount++;
+                oWriter.write(orderId + "," + userId + ",1000000," + status + ",2024-06-06 12:00:00\n");
 
-COMMIT TRANSACTION;
-PRINT '=== HOÀN TẤT! ĐÃ CÓ TỔNG CỘNG 10.000 DÒNG DỮ LIỆU ===';
-Cách bạn "báo cáo" với giảng viên (Ăn điểm trọn vẹn)
-Khi chạy xong script này, bạn sẽ có 3 bảng đầy ắp dữ liệu. Lúc thầy hỏi hoặc lúc viết báo cáo, bạn trình bày như sau:
+                // Nếu thành công thì ghi chi tiết đơn hàng
+                if (status.equals("Completed")) {
+                    oiWriter.write("IT" + orderItemCount++ + "," + orderId + "," + hotVariantId + "," + qtyBuy + ",1000000\n");
+                }
+            }
+            
+            System.out.println("   Kết quả Flash Sale: Kho còn lại = " + inventoryMap.get(hotVariantId));
+            
+            // Tạo thêm các đơn hàng lẻ tẻ khác cho đủ 10.000 dòng
+            System.out.println("⚡ Đang tạo thêm các đơn hàng thường cho đủ KPI...");
+            for(int i=0; i<8500; i++) {
+                 String userId = userIds.get(random.nextInt(userIds.size()));
+                 String randVid = variantIds.get(random.nextInt(variantIds.size()));
+                 String oId = "OD_REG_" + i;
+                 oWriter.write(oId + "," + userId + ",500000,Completed,2024-06-07\n");
+                 oiWriter.write("IT_REG_" + i + "," + oId + "," + randVid + ",1,500000\n");
+            }
 
-Quy mô: "Nhóm em đã giả lập một hệ thống cũ gồm 10.000 bản ghi (Records), bao gồm dữ liệu khách hàng, sản phẩm và lịch sử giao dịch."
+        } catch (IOException e) { e.printStackTrace(); }
+    }
 
-Chiến thuật: "Em không chỉ tạo dữ liệu sản phẩm, mà còn tạo mối quan hệ (Foreign Key) giữa Đơn hàng - Khách hàng - Sản phẩm để mô phỏng thực tế."
+    // Tiện ích ghi file
+    static BufferedWriter createWriter(String fileName) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8));
+        writer.write("\uFEFF"); // BOM
+        return writer;
+    }
+}
 
-Dữ liệu bẩn (Dirty Data): "Em đã dùng thuật toán Random để cài cắm khoảng 7% dữ liệu lỗi như: Email thiếu đuôi @, Giá tiền bị âm, Số điện thoại chứa chữ cái... nhằm mục đích test chức năng Import & Cleaning của hệ thống mới."
+tạo bộ dữ liệu mẫu legacy data bằng script >10000 dòng cố tình cài cắm lỗi sai format
+
+Đây là một chiến lược rất thông minh để "ghi điểm" trong mắt giảng viên. Việc có một bộ dữ liệu "Legacy" (Dữ liệu cũ từ hệ thống khác) đầy lỗi giúp bạn chứng minh được tính năng Data Cleaning (Làm sạch dữ liệu) hoặc ETL (Extract - Transform - Load) của hệ thống mới.
+
+Dưới đây là script Java để sinh ra file legacy_products_raw.csv gồm 12.500 dòng, trong đó chứa khoảng 20% dữ liệu bị lỗi format (giá dính chữ, ngày tháng sai, null, trùng lặp...).
+
+1. Code Sinh Dữ Liệu "Bẩn" (LegacyDataGenerator.java)
+Bạn tạo file LegacyDataGenerator.java và chạy code sau:
+
+Java
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Random;
+
+public class LegacyDataGenerator {
+
+    public static void main(String[] args) {
+        String fileName = "legacy_products_raw.csv";
+        int totalRows = 12500; // > 10.000 dòng theo yêu cầu
+
+        // Dữ liệu mẫu để ghép tên
+        String[] brands = {"Samsung", "Apple", "Xiaomi", "Oppo", "Sony", "LG", "Nokia"};
+        String[] types = {"Dien thoai", "May tinh bang", "Tai nghe", "Sac du phong", "Op lung"};
+        String[] statusList = {"New", "Old", "Refurbished", "Unknown"};
+
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))) {
+
+            // 1. Ghi BOM để mở Excel không lỗi font
+            writer.write("\uFEFF");
+
+            // 2. Header kiểu cũ (Viết hoa, không chuẩn convention)
+            writer.write("PROD_ID,PROD_NAME,PRICE_RAW,STOCK_QTY,IMPORT_DATE,STATUS,NOTE\n");
+
+            Random random = new Random();
+
+            for (int i = 1; i <= totalRows; i++) {
+                boolean isErrorRow = random.nextInt(100) < 20; // 20% dòng sẽ bị lỗi format
+
+                // --- A. Tạo dữ liệu chuẩn trước ---
+                String id = String.valueOf(1000 + i);
+                String name = types[random.nextInt(types.length)] + " " + brands[random.nextInt(brands.length)] + " " + i;
+                
+                double realPrice = 100000 + random.nextInt(9000000);
+                String priceStr = String.format("%.0f", realPrice); // Giá chuẩn: 150000
+                
+                int realStock = random.nextInt(500);
+                String stockStr = String.valueOf(realStock); // Tồn kho chuẩn: 50
+                
+                // Ngày chuẩn: YYYY-MM-DD
+                String dateStr = "2023-" + (1 + random.nextInt(12)) + "-" + (1 + random.nextInt(28));
+                String status = statusList[random.nextInt(statusList.length)];
+                String note = "";
+
+                // --- B. Cố tình phá hoại (Inject Errors) ---
+                if (isErrorRow) {
+                    int errorType = random.nextInt(6); // Random 6 kiểu lỗi phổ biến
+                    
+                    switch (errorType) {
+                        case 0: // Lỗi Giá: Dính chữ "k", "đ", dấu phẩy
+                            if (random.nextBoolean()) {
+                                priceStr = (realPrice / 1000) + "k"; // VD: 150k
+                            } else {
+                                priceStr = String.format("%,.0f", realPrice) + " vnd"; // VD: 150,000 vnd
+                            }
+                            note = "ERR_FORMAT_PRICE";
+                            break;
+
+                        case 1: // Lỗi Tồn kho: Số âm hoặc chữ
+                            if (random.nextBoolean()) {
+                                stockStr = "-" + random.nextInt(10); // VD: -5
+                            } else {
+                                stockStr = "Out of Stock"; // VD: Chữ thay vì số
+                            }
+                            note = "ERR_LOGIC_STOCK";
+                            break;
+
+                        case 2: // Lỗi Ngày tháng: Định dạng sai hoặc ngày không tồn tại
+                            dateStr = "13/20/2023"; // Tháng 20?
+                            note = "ERR_FORMAT_DATE";
+                            break;
+
+                        case 3: // Lỗi Null: Dữ liệu quan trọng bị rỗng
+                            name = "";
+                            note = "ERR_MISSING_NAME";
+                            break;
+
+                        case 4: // Lỗi Trùng lặp ID (Duplicate Key)
+                            id = String.valueOf(1000 + i - 1); // Trùng với dòng trước đó
+                            note = "ERR_DUPLICATE_ID";
+                            break;
+                            
+                        case 5: // Lỗi Encoding/Rác
+                            name = "#N/A @ERROR!!!";
+                            break;
+                    }
+                }
+
+                // Ghi vào file
+                writer.write(id + "," + name + "," + priceStr + "," + stockStr + "," + dateStr + "," + status + "," + note + "\n");
+            }
+
+            System.out.println("✅ Đã tạo xong file " + fileName + " (" + totalRows + " dòng).");
+            System.out.println("⚠️ Cảnh báo: File chứa nhiều lỗi định dạng để test Data Cleaning.");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
