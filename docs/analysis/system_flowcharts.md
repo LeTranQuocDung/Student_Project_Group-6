@@ -40,6 +40,7 @@ flowchart TD
 
 
 ## 3. Admin Process
+```mermaid
 flowchart TD
     Start([Start Admin]) --> ViewList[View Product List]
     ViewList --> Action{Select Action}
