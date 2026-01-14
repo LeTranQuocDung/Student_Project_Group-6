@@ -261,6 +261,48 @@ flowchart TD
     
 
     Success --> ViewList
+# Sơ đồ lớp (Class Diagram)
+
+```mermaid
+classDiagram
+    %% Class User đại diện cho bảng Users
+    class User {
+        -int userID
+        -String username
+        -String password
+        -String fullName
+        -String email
+        -String role
+        +boolean login(String user, String pass)
+        +boolean register()
+        +boolean isAdmin()
+    }
+
+    %% Class Product đại diện cho bảng Products
+    class Product {
+        -int productID
+        -String productName
+        +double price
+        -int stockQuantity
+        -String imageURL
+        -String description
+        +List~Product~ searchProduct(String keyword)
+        +boolean checkStock()
+    }
+
+    %% Class Controller dùng để quản lý logic
+    class ProductManagement {
+        +void addProduct(Product p)
+        +void updateProduct(Product p)
+        +void deleteProduct(int id)
+    }
+
+    %% Quan hệ: User (Admin) sử dụng chức năng Quản lý
+    User ..> ProductManagement : uses (if Admin)
+    
+    %% Quan hệ: Quản lý tác động lên Product
+    ProductManagement --> Product : manages
+```
 
 dịch hết sang tiếng anh
 Đây là nội dung Full tiếng Anh 100% (bao gồm cả tiêu đề và nội dung trong sơ đồ), chuẩn chỉnh để nộp cho các môn học quốc tế hoặc dự án bằng tiếng Anh.
@@ -360,3 +402,40 @@ flowchart TD
     DeleteDB --> Success
     
     Success --> ViewList
+# 4. Class Diagram (System Structure)
+
+```mermaid
+classDiagram
+    class User {
+        -int userID
+        -String username
+        -String password
+        -String fullName
+        -String email
+        -String role
+        +boolean login(String user, String pass)
+        +boolean register()
+        +boolean isAdmin()
+    }
+
+    class Product {
+        -int productID
+        -String productName
+        -double price
+        -int stockQuantity
+        -String imageURL
+        -String description
+        +List~Product~ searchProduct(String keyword)
+        +boolean checkStock()
+    }
+
+    class ProductManagement {
+        +void addProduct(Product p)
+        +void updateProduct(Product p)
+        +void deleteProduct(int id)
+    }
+
+    %% Relationships
+    User ..> ProductManagement : uses (if Admin)
+    ProductManagement --> Product : manages
+```
