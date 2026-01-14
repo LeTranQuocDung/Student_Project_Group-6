@@ -58,5 +58,43 @@ flowchart TD
 ```
 
 
+## 4. Class Diagram (System Structure)
+```mermaid
+classDiagram
+    class User {
+        -int userID
+        -String username
+        -String password
+        -String fullName
+        -String email
+        -String role
+        +boolean login(String user, String pass)
+        +boolean register()
+        +boolean isAdmin()
+    }
+
+    class Product {
+        -int productID
+        -String productName
+        -double price
+        -int stockQuantity
+        -String imageURL
+        -String description
+        +List~Product~ searchProduct(String keyword)
+        +boolean checkStock()
+    }
+
+    class ProductManagement {
+        +void addProduct(Product p)
+        +void updateProduct(Product p)
+        +void deleteProduct(int id)
+    }
+
+    %% Relationships
+    User ..> ProductManagement : uses (if Admin)
+    ProductManagement --> Product : manages
+```
+
+
 
 
