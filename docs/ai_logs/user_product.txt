@@ -1,107 +1,14 @@
-cho t xin code vẽ flowchart phần user và product
+cho t xin code vẽ flowchart và class diagram phần user và product
 
-# TÀI LIỆU THIẾT KẾ HỆ THỐNG (USER & PRODUCT)
-
-
-
-
-
-
-
-## 1. Flowchart Quy trình Đăng nhập
-
-
-
-```mermaid
-
-
-
-flowchart TD
-
-
-
-    Start([Bắt đầu]) --> Input[/Người dùng nhập User & Pass/]
-
-
-
-    Input --> CheckEmpty{Dữ liệu rỗng?}
-
-
-
-    CheckEmpty -- Có --> Error1[Thông báo: Vui lòng nhập đủ]
-
-
-
-    Error1 --> Input
-
-
-
-    CheckEmpty -- Không --> QueryDB[(Query Database Users)]
-
-
-
-    QueryDB --> CheckValid{User/Pass đúng?}
-
-
-
-    CheckValid -- Sai --> Error2[Thông báo: Sai tài khoản]
-
-
-
-    Error2 --> Input
-
-
-
-    CheckValid -- Đúng --> CheckRole{Kiểm tra Role}
-
-
-
-    CheckRole -- Admin --> RedirectAdmin[Chuyển hướng: Admin Dashboard]
-
-
-
-    CheckRole -- Customer --> RedirectHome[Chuyển hướng: Trang chủ]
-
-
-
-    RedirectAdmin --> End([Kết thúc])
-
-
-
-    RedirectHome --> End
-
-
-
-Ok, đây là toàn bộ nội dung đầy đủ để bạn copy vào file flowuserandproduct.md.
-
-
-
+Ok, đây là toàn bộ nội dung đầy đủ để bạn copy.
 Nó bao gồm 4 phần quan trọng nhất cho nhiệm vụ của bạn:
-
-
-
 Login Flow: Đăng nhập & Phân quyền.
-
-
-
 Product View Flow: Khách tìm kiếm & xem hàng.
-
-
-
 Admin Product Flow: Quản lý thêm/xóa/sửa hàng.
-
-
-
 Class Diagram: Thiết kế code Java cho User & Product.
-
-
-
 Bạn mở file bằng Notepad (hoặc VS Code), xóa trắng hết nội dung cũ, rồi Copy nguyên văn đoạn dưới đây dán vào nhé:
 
-
-
 Markdown
-
 # TÀI LIỆU THIẾT KẾ HỆ THỐNG (MODULE USER & PRODUCT)
 
 **Người thực hiện:** (Tên của bạn)
@@ -117,9 +24,6 @@ Markdown
 ## 1. Flowchart Quy trình Đăng nhập (Login Process)
 
 Mô tả luồng xử lý khi người dùng thực hiện đăng nhập vào hệ thống.
-
-
-
 ```mermaid
 
 flowchart TD
@@ -304,6 +208,49 @@ classDiagram
     ProductManagement --> Product : manages
 ```
 
+# Sơ đồ lớp (Class Diagram)
+
+```mermaid
+classDiagram
+    %% Class User đại diện cho bảng Users
+    class User {
+        -int userID
+        -String username
+        -String password
+        -String fullName
+        -String email
+        -String role
+        +boolean login(String user, String pass)
+        +boolean register()
+        +boolean isAdmin()
+    }
+
+    %% Class Product đại diện cho bảng Products
+    class Product {
+        -int productID
+        -String productName
+        +double price
+        -int stockQuantity
+        -String imageURL
+        -String description
+        +List~Product~ searchProduct(String keyword)
+        +boolean checkStock()
+    }
+
+    %% Class Controller dùng để quản lý logic
+    class ProductManagement {
+        +void addProduct(Product p)
+        +void updateProduct(Product p)
+        +void deleteProduct(int id)
+    }
+
+    %% Quan hệ: User (Admin) sử dụng chức năng Quản lý
+    User ..> ProductManagement : uses (if Admin)
+    
+    %% Quan hệ: Quản lý tác động lên Product
+    ProductManagement --> Product : manages
+```
+
 dịch hết sang tiếng anh
 Đây là nội dung Full tiếng Anh 100% (bao gồm cả tiêu đề và nội dung trong sơ đồ), chuẩn chỉnh để nộp cho các môn học quốc tế hoặc dự án bằng tiếng Anh.
 
@@ -438,4 +385,8 @@ classDiagram
     %% Relationships
     User ..> ProductManagement : uses (if Admin)
     ProductManagement --> Product : manages
+<<<<<<< HEAD
 ```
+=======
+```
+>>>>>>> bb45e3508215c38cd61449adb8efc31242e72958

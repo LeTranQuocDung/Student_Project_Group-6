@@ -12,8 +12,8 @@ graph TD
     D -->|Yes| D1[Stop]
     D -->|No| E[Calc Base Price]
 
-    E --> F[Apply Flash Sale]
-    F --> G[Apply Shop Voucher]
+    
+    E --> G[Apply Shop Voucher]
     G --> H[Apply Platform Voucher]
 
     H --> I[Calc Final Amount]
@@ -53,53 +53,6 @@ graph TD
 
     G --> I[Voucher OK]
     H --> I
-```
-
----
-
-## 3. Class Diagram - Checkout Module
-
-```mermaid
-classDiagram
-    class Cart {
-        int cartId
-        getItems()
-    }
-
-    class CartItem {
-        int quantity
-    }
-
-    class ProductVariant {
-        int variantId
-        float price
-        int stock
-    }
-
-    class Voucher {
-        string code
-        string type
-        float value
-    }
-
-    class Order {
-        int orderId
-        float finalAmount
-        create()
-    }
-
-    class CheckoutService {
-        calculatePrice()
-        applyVoucher()
-        createOrder()
-    }
-
-    Cart "1" --> "0..*" CartItem
-    CartItem "*" --> "1" ProductVariant
-    Order "1" --> "0..*" ProductVariant
-    CheckoutService --> Cart
-    CheckoutService --> Order
-    CheckoutService --> Voucher
 ```
 
 ---

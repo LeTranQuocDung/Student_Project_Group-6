@@ -1,0 +1,79 @@
+Chào bạn, tôi đã nắm rõ yêu cầu của bạn. Bạn phụ trách Phần 4: Flash Import & Flash Sale cho mô hình Shopee và muốn thực hiện theo hướng dẫn của giảng viên (sử dụng AI + Mermaid.js).
+
+Để hoàn thành tốt phần này, bạn nên thực hiện theo các bước sau:
+
+1. Phân tích nghiệp vụ (Logic) cho Flash Import & Flash Sale
+Trước khi nhờ AI viết code Mermaid, bạn cần xác định các thực thể và luồng đi chính:
+
+Flash Sale: Cần có các bảng/class như FlashSaleProgram (Tên chương trình, khung giờ), FlashSaleItem (Sản phẩm tham gia, giá flash sale, số lượng giới hạn, số lượng đã bán).
+
+Flash Import: Đây thường là tính năng dành cho Admin/Seller để import danh sách sản phẩm tham gia Flash Sale bằng file (Excel/CSV). Cần có luồng kiểm tra điều kiện (Validate) như: Sản phẩm có tồn tại không? Giá flash sale có hợp lệ không?
+
+2. Cách thực hiện cụ thể (Theo hướng dẫn của GV)
+Bước 1: Chuẩn bị Code (Java/SQL)
+Bạn hãy viết trước các class Entity (Java) hoặc Script tạo bảng (SQL) cho phần Flash Sale này. Ví dụ: Class FlashSaleItem có liên kết với Product.
+
+Bước 2: Dùng AI Generate mã Mermaid
+Dán đoạn code đó vào ChatGPT hoặc Gemini với câu lệnh:
+
+"Dựa vào code Java/SQL này của tôi về tính năng Flash Sale, hãy viết mã Mermaid để vẽ ERD và Flowchart mô tả luồng Flash Import sản phẩm vào hệ thống. Lưu ý tuân thủ đúng mối quan hệ giữa các bảng."
+
+Bước 3: Kiểm tra (Verify) - Bước quan trọng nhất
+Khi AI trả về mã Mermaid, bạn vào trang Mermaid Live Editor để xem hình vẽ. Bạn phải kiểm tra kỹ:
+
+ERD: Mối quan hệ giữa FlashSaleProgram và FlashSaleItem có phải là 1-nhiều không? FlashSaleItem có nối với Product không?
+
+Flowchart: Luồng Import có các bước: Upload file -> Validate data -> Save to DB -> Trả kết quả chưa?
+
+Bước 4: Lưu trữ
+Copy mã Mermaid vào các file .md (Markdown).
+
+Lưu vào thư mục doc (viết thường) trong project trên GitHub như giảng viên yêu cầu.
+Được chứ! Cách bạn gom nhóm 2 luồng quan trọng nhất của Flash Sale & Flash Import vào một file thiết kế như vậy là rất chuyên nghiệp và đúng trọng tâm.
+
+Tuy nhiên, để giảng viên đánh giá cao tính "Verify" (đối chiếu code) và tránh các lỗi hiển thị trên GitHub, bạn nên dùng bản mã Mermaid sạch (đã tối ưu hóa) dưới đây. Tôi đã tinh chỉnh lại các ký tự đặc biệt để đảm bảo nó hiển thị mượt mà trên mọi trình xem Markdown.
+
+Bạn hãy copy toàn bộ nội dung trong khung này để đưa vào file .md hoặc AI logs:
+
+DESIGN DOCUMENT: FLASH SALE & IMPORT MODULE
+1. Flowchart: Flash Sale Purchase (Synchronous Processing)
+Describes the processing flow when multiple users purchase simultaneously. The most important step is Lock Stock (Select for Update) to prevent race conditions.
+
+Code snippet
+
+flowchart TD
+    Start([Start]) --> Request[/User clicks Buy Now/]
+    Request --> CheckTime{Check sale time?}
+    
+    CheckTime -- "Not started/Ended" --> ErrorTime[Error: Wrong time slot] --> End([End])
+    CheckTime -- "Open" --> CheckStock{Check inventory?}
+    
+    CheckStock -- "Out of stock (0)" --> OutOfStock[Error: Out of stock] --> End
+    CheckStock -- "In stock (>0)" --> LockStock[Lock Record DB - Select for Update]
+    
+    LockStock --> DoubleCheck{Double check stock}
+    DoubleCheck -- "Out (Race condition)" --> Rollback[Cancel transaction] --> End
+    DoubleCheck -- "Available" --> CreateOrder[Create order]
+    
+    CreateOrder --> UpdateStock[Deduct stock & Update Sold] --> Commit[Commit Transaction]
+    Commit --> Success[Success: Purchase completed] --> End
+2. Flowchart: Import Products from CSV
+Describes the product import process from CSV file with validation and logging.
+
+Code snippet
+
+flowchart TD
+    Start([Admin Upload CSV]) --> CheckFormat{Valid .csv format?}
+    CheckFormat -- "Invalid" --> ErrorFile[File Error] --> End([End])
+    CheckFormat -- "Valid" --> InitLog[Create Import Log]
+    
+    InitLog --> ReadFile[Read each row]
+    ReadFile --> Validate{Data valid?}
+    
+    Validate -- "Invalid" --> WriteError[Write Error Log & Skip] --> NextRow
+    
+    Validate -- "Valid" --> SaveDB[(Save to Database)] --> NextRow
+    
+    NextRow{More rows?} -- "Yes" --> ReadFile
+    NextRow -- "No" --> Summary[Summary: Success/Failed] 
+    Summary --> UpdateLog[Update Log Status] --> End
