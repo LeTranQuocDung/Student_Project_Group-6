@@ -8,30 +8,20 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import model.ProductDTO;
-import java.io.IOException;
-import javax.servlet.ServletException; // Đổi từ jakarta sang javax
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "HomeServlet", urlPatterns = {"/home"})
 public class HomeServlet extends HttpServlet {
 
- 
-    static final String DB_URL = 
-    
- "jdbc:sqlserver://localhost:1433;"
-+ "databaseName=ShopeeDB;"
-+ "encrypt=true;"
-+ "trustServerCertificate=true;";
+    static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=ShopeeDB;encrypt=true;trustServerCertificate=true";
+    static final String USER = "sa";
+    static final String PASS = "trung31102005"; 
 
-String user = "sa";
-String pass = "123456";
-
-     
-
-   protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         // 1. Lấy từ khóa tìm kiếm từ JSP gửi về (giả sử tên ô input là name="txt")
@@ -53,7 +43,7 @@ String pass = "123456";
 
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            try (Connection conn = DriverManager.getConnection(DB_URL, user, pass);
+            try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 
                 // 4. Nếu có tìm kiếm -> Nhét từ khóa vào dấu ?

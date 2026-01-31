@@ -1,6 +1,7 @@
 package model;
 
 public class ProductDTO {
+
     private int id;
     private String name;
     private String shopName;
@@ -16,9 +17,23 @@ public class ProductDTO {
         this.image = "https://placehold.co/300x300/orange/white?text=" + name.replaceAll(" ", "+");
     }
 
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public String getShopName() { return shopName; }
-    public double getMinPrice() { return minPrice; }
-    public String getImage() { return image; }
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public double getMinPrice() {
+        return minPrice;
+    }
+
+    public String getImage() {
+        return image;
+    }
 }

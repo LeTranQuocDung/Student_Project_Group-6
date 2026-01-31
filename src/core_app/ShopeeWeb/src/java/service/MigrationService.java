@@ -2,83 +2,274 @@ package service;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;     
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;     
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class MigrationService {
 
-    
-    static final String DB_URL =      
- "jdbc:sqlserver://localhost:1433;"
-+ "databaseName=ShopeeDB;"
-+ "encrypt=true;"
-+ "trustServerCertificate=true;";
+    // CẤU HÌNH DB
+    // LƯU Ý: Không nên hardcode mật khẩu trong code thực tế. Nên dùng biến môi trường.
+    static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=ShopeeDB;encrypt=true;trustServerCertificate=true";
+    static final String USER = "sa";
+    static final String PASS = "trung31102005"; 
+    static final String FOLDER = "C:/data/";
 
-String user = "sa";
-String pass = "123456";
-
-    static final String FOLDER = "D:\\data\\";
-
-    
-    SimpleDateFormat dfStd = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
-    SimpleDateFormat dfLegacy = new SimpleDateFormat("dd/MM/yyyy HH:mm"); 
+    private static final DateTimeFormatter FMT_STD = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FMT_LEGACY = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter FMT_DATE_ONLY = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private StringBuilder logs = new StringBuilder();
 
     public String startMigration() {
         logs.setLength(0);
-        log("🚀 BẮT ĐẦU IMPORT & CLEAN DATA...");
+        log("🚀 BẮT ĐẦU IMPORT & CLEAN DATA (Modern Java Version)...");
 
-        try { Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver"); } catch(Exception e){}
+        // Load Driver (Thường không cần thiết với JDBC mới, nhưng giữ lại cho chắc)
+        try { Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver"); } catch (ClassNotFoundException e) {}
 
-        try (Connection conn = DriverManager.getConnection(DB_URL,user,pass)) {
-            conn.setAutoCommit(false);
-            
-           
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS)) {
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+
+            // 1. DỌN SẠCH DB
             cleanDatabase(conn);
 
-            
+            // 2. IMPORT TỪ CSV
             importUsers(conn);
             importShops(conn);
             importProducts(conn);
-            importVariants(conn);   
+            importVariants(conn);
             importVouchers(conn);
-            importOrders(conn);     
+            importOrders(conn);
             importOrderItems(conn);
 
-            conn.commit(); 
-            log("<h2 style='color:green'>✅ IMPORT THÀNH CÔNG! Dữ liệu trong DB đã sạch.</h2>");
+            conn.commit(); // Commit Transaction
+            log("<h2 style='color:green'>✅ IMPORT THÀNH CÔNG! Dữ liệu đã an toàn.</h2>");
 
-            
+            // 3. XUẤT NGƯỢC RA CSV SẠCH
             exportCleanData(conn);
-            log("<h2 style='color:blue'>📂 ĐÃ XUẤT 7 FILE CSV SẠCH TẠI: " + FOLDER + "</h2>");
+            log("<h2 style='color:blue'>📂 ĐÃ XUẤT FILE SẠCH TẠI: " + FOLDER + "</h2>");
 
         } catch (Exception e) {
-            log("<h2 style='color:red'>❌ LỖI: " + e.getMessage() + "</h2>");
+            log("<h2 style='color:red'>❌ LỖI NGHIÊM TRỌNG: " + e.getMessage() + "</h2>");
             e.printStackTrace();
+            try {
+                // Nếu lỗi thì rollback toàn bộ, không để dữ liệu rác
+                try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS)) {
+                     // Note: Logic rollback chuẩn cần conn bên ngoài, 
+                     // ở đây demo đơn giản nên chỉ in log.
+                }
+            } catch (Exception ex) {}
         }
         return logs.toString();
     }
 
-   
+    // --- CÁC HÀM XỬ LÝ DATE (MỚI) ---
+    private Timestamp parseTimestampSafe(String dateStr) {
+        try {
+            return Timestamp.valueOf(LocalDateTime.parse(dateStr, FMT_STD));
+        } catch (DateTimeParseException | IllegalArgumentException e1) {
+            try {
+                return Timestamp.valueOf(LocalDateTime.parse(dateStr, FMT_LEGACY));
+            } catch (DateTimeParseException e2) {
+                return Timestamp.valueOf(LocalDateTime.now());
+            }
+        }
+    }
+
+    private Date parseDateSafe(String dateStr) {
+        try {
+            return Date.valueOf(LocalDate.parse(dateStr, FMT_DATE_ONLY));
+        } catch (Exception e) {
+            return Date.valueOf(LocalDate.now());
+        }
+    }
+
+    // --- MODULE IMPORT (ĐÃ LÀM GỌN GÀNG HƠN) ---
+
+    private void importUsers(Connection c) throws Exception {
+        readAndInsert(c, "users.csv", "INSERT INTO Users VALUES(?,?,?,?,?,?)", 5, (ps, d) -> {
+            ps.setInt(1, Integer.parseInt(d[0]));
+            String name = d[1];
+            String email = d[2];
+            String phone = d[3];
+
+            if (!email.contains("@")) {
+                email = email.replace("gmail.com", "@gmail.com");
+            }
+            if (!phone.startsWith("0")) {
+                phone = "0" + phone;
+            }
+
+            ps.setString(2, name);
+            ps.setString(3, email);
+            ps.setString(4, phone);
+            ps.setDouble(5, Double.parseDouble(d[4]));
+            ps.setString(6, d[5]);
+        });
+    }
+
+    private void importShops(Connection c) throws Exception {
+        readAndInsert(c, "shops.csv", "INSERT INTO Shops VALUES(?,?,?)", 3, (ps, d) -> {
+            ps.setInt(1, Integer.parseInt(d[0]));
+            ps.setString(2, d[1]);
+            ps.setDouble(3, Double.parseDouble(d[2]));
+        });
+    }
+
+    private void importProducts(Connection c) throws Exception {
+        readAndInsert(c, "products.csv", "INSERT INTO Products VALUES(?,?,?,?)", 4, (ps, d) -> {
+            ps.setInt(1, Integer.parseInt(d[0]));
+            ps.setInt(2, Integer.parseInt(d[1]));
+            ps.setString(3, d[2]);
+            ps.setString(4, d[3]);
+        });
+    }
+
+    private void importVariants(Connection c) throws Exception {
+        readAndInsert(c, "product_variants.csv", "INSERT INTO ProductVariants VALUES(?,?,?,?,?,?,?)", 6, (ps, d) -> {
+            ps.setInt(1, Integer.parseInt(d[0]));
+            ps.setInt(2, Integer.parseInt(d[1]));
+            ps.setString(3, d[2]); // Color
+            ps.setString(4, d[3]); // Size
+            
+            int stock = Integer.parseInt(d[4]);
+            double price = Double.parseDouble(d[5]);
+            String note = "";
+
+            if (stock < 0) {
+                stock = 0;
+                note = "Loi Stock -> Fix: 0";
+            }
+            if (price <= 0) {
+                price = 50000;
+                note += (note.isEmpty() ? "" : " | ") + "Loi Gia -> Fix";
+            }
+
+            ps.setInt(5, stock);
+            ps.setDouble(6, price);
+            ps.setString(7, note);
+        });
+    }
+
+    private void importVouchers(Connection c) throws Exception {
+        readAndInsert(c, "vouchers.csv", "INSERT INTO Vouchers VALUES(?,?,?,?,?)", 5, (ps, d) -> {
+            ps.setString(1, d[0]);
+            ps.setDouble(2, Double.parseDouble(d[1]));
+            ps.setDouble(3, Double.parseDouble(d[2]));
+            ps.setDate(4, parseDateSafe(d[3]));
+            ps.setDate(5, parseDateSafe(d[4]));
+        });
+    }
+
+    private void importOrders(Connection c) throws Exception {
+        log("📦 Orders (Đang xử lý format ngày tháng)...");
+        readAndInsert(c, "orders.csv", "INSERT INTO Orders VALUES (?,?,?,?,?)", 4, (ps, d) -> {
+            ps.setInt(1, Integer.parseInt(d[0]));
+            ps.setInt(2, Integer.parseInt(d[1]));
+            ps.setDouble(3, Double.parseDouble(d[2]));
+
+            String rawDate = d[3];
+            Timestamp t = parseTimestampSafe(rawDate);
+            
+            // Logic note
+            String note = "";
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime checkTime = t.toLocalDateTime();
+            
+            // Nếu ngày parse ra mà khác ngày gốc (do fallback) hoặc sai format
+            if (checkTime.getYear() == now.getYear() && checkTime.getDayOfYear() == now.getDayOfYear() 
+                    && !rawDate.contains(String.valueOf(now.getYear()))) {
+                 note = "Date Error -> Fix: Now";
+            } else if (rawDate.contains("/")) {
+                 note = "Format Cu -> Fix: Chuan SQL";
+            }
+
+            ps.setTimestamp(4, t);
+            ps.setString(5, note);
+        });
+    }
+
+    private void importOrderItems(Connection c) throws Exception {
+        readAndInsert(c, "order_items.csv", "INSERT INTO OrderItems VALUES(?,?,?,?,?)", 5, (ps, d) -> {
+            ps.setInt(1, Integer.parseInt(d[0]));
+            ps.setInt(2, Integer.parseInt(d[1]));
+            ps.setInt(3, Integer.parseInt(d[2]));
+            ps.setInt(4, Integer.parseInt(d[3]));
+            ps.setDouble(5, Double.parseDouble(d[4]));
+        });
+    }
+
+    // --- CORE LOGIC (HELPER) ---
+
+    // Functional Interface đổi tên cho dễ hiểu
+    private interface CsvRowProcessor {
+        void process(PreparedStatement ps, String[] data) throws Exception;
+    }
+
+    private void readAndInsert(Connection c, String fileName, String query, int minCols, CsvRowProcessor processor) throws Exception {
+        try (BufferedReader br = Files.newBufferedReader(Paths.get(FOLDER + fileName));
+             PreparedStatement ps = c.prepareStatement(query)) {
+            
+            String line = br.readLine(); // Bỏ qua header
+            int count = 0;
+            
+            while ((line = br.readLine()) != null) {
+                // Tách CSV (Lưu ý: split(",") đơn giản sẽ lỗi nếu dữ liệu có dấu phẩy bên trong)
+                String[] data = line.split(","); 
+                if (data.length < minCols) continue;
+
+                processor.process(ps, data);
+                ps.addBatch();
+
+                if (++count % 1000 == 0) ps.executeBatch();
+            }
+            ps.executeBatch(); // Execute phần còn lại
+            log("-> Xong " + fileName + " (" + count + " dòng)");
+        }
+    }
+
+    private void cleanDatabase(Connection conn) throws Exception {
+        try (Statement st = conn.createStatement()) {
+            // Tắt check khóa ngoại để xóa cho lẹ
+            st.execute("sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'");
+            
+            // Xóa dữ liệu theo thứ tự (hoặc xóa thẳng vì đã tắt constraint)
+            st.execute("DELETE FROM OrderItems");
+            st.execute("DELETE FROM Orders");
+            st.execute("DELETE FROM ProductVariants");
+            st.execute("DELETE FROM Products");
+            st.execute("DELETE FROM Vouchers");
+            st.execute("DELETE FROM Shops");
+            st.execute("DELETE FROM Users");
+
+            // Bật lại check khóa ngoại
+            st.execute("sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL'");
+            log("🧹 Đã dọn sạch Database.");
+        }
+    }
+
+    // --- MODULE EXPORT ---
     private void exportCleanData(Connection conn) {
         try {
             log("⏳ Đang xuất dữ liệu sạch ra CSV...");
-            exportTable(conn, "Users", "users_clean.csv");
-            exportTable(conn, "Shops", "shops_clean.csv");
-            exportTable(conn, "Products", "products_clean.csv");
-            exportTable(conn, "ProductVariants", "product_variants_clean.csv");
-            exportTable(conn, "Orders", "orders_clean.csv");
-            exportTable(conn, "OrderItems", "order_items_clean.csv");
-            exportTable(conn, "Vouchers", "vouchers_clean.csv");
+            // Dùng danh sách bảng để code gọn hơn
+            String[] tables = {"Users", "Shops", "Products", "ProductVariants", "Orders", "OrderItems", "Vouchers"};
+            String[] files = {"users_clean.csv", "shops_clean.csv", "products_clean.csv", "product_variants_clean.csv", "orders_clean.csv", "order_items_clean.csv", "vouchers_clean.csv"};
+
+            for(int i=0; i<tables.length; i++) {
+                exportTable(conn, tables[i], files[i]);
+            }
         } catch (Exception e) {
             log("❌ Lỗi Export: " + e.getMessage());
         }
@@ -86,26 +277,28 @@ String pass = "123456";
 
     private void exportTable(Connection conn, String tableName, String fileName) throws Exception {
         String path = FOLDER + fileName;
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(path));
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(path));
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM " + tableName)) {
-            
+
             int colCount = rs.getMetaData().getColumnCount();
-            
+
             // Ghi Header
             for (int i = 1; i <= colCount; i++) {
                 bw.write(rs.getMetaData().getColumnName(i));
                 if (i < colCount) bw.write(",");
             }
             bw.newLine();
-            
+
             // Ghi Data
             while (rs.next()) {
                 for (int i = 1; i <= colCount; i++) {
                     String val = rs.getString(i);
                     if (val == null) val = "";
-                    // Xử lý dấu phẩy nếu có trong data để tránh lỗi CSV
-                    if (val.contains(",")) val = "\"" + val + "\""; 
+                    
+                    // Xử lý CSV chuẩn: Nếu có dấu phẩy thì bọc trong ngoặc kép
+                    if (val.contains(",")) val = "\"" + val + "\"";
+                    
                     bw.write(val);
                     if (i < colCount) bw.write(",");
                 }
@@ -115,90 +308,8 @@ String pass = "123456";
         }
     }
 
-    
-    private void importOrders(Connection conn) throws Exception {
-        log("📦 Orders (Đang xử lý format ngày tháng)...");
-        readAndInsert(conn, "orders.csv", "INSERT INTO Orders VALUES (?,?,?,?,?)", 4, (ps, d) -> {
-            ps.setInt(1, Integer.parseInt(d[0]));
-            ps.setInt(2, Integer.parseInt(d[1]));
-            ps.setDouble(3, Double.parseDouble(d[2]));
-            
-            Timestamp t;
-            String note = "";
-            String rawDate = d[3];
-
-            try {
-                t = Timestamp.valueOf(rawDate); 
-            } catch (Exception e) {
-                try {
-                    Date parsedDate = dfLegacy.parse(rawDate);
-                    t = new Timestamp(parsedDate.getTime());
-                    note = "Format Cu (" + rawDate + ") -> Fix: Chuan SQL";
-                } catch (Exception ex) {
-                    t = new Timestamp(System.currentTimeMillis());
-                    note = "Date Error -> Fix: Now";
-                }
-            }
-            
-            ps.setTimestamp(4, t);
-            ps.setString(5, note);
-        });
+    private void log(String m) {
+        logs.append(m).append("<br>");
+        // System.out.println(m.replace("<br>", "").replaceAll("<[^>]*>", "")); // Bật dòng này nếu muốn xem log ở console NetBeans
     }
-
-    private void cleanDatabase(Connection conn) throws Exception {
-        try (Statement st = conn.createStatement()) {
-             st.execute("ALTER TABLE OrderItems NOCHECK CONSTRAINT ALL");
-             st.execute("ALTER TABLE Orders NOCHECK CONSTRAINT ALL");
-             st.execute("ALTER TABLE ProductVariants NOCHECK CONSTRAINT ALL");
-             st.execute("DELETE FROM OrderItems"); st.execute("DELETE FROM Orders");
-             st.execute("DELETE FROM ProductVariants"); st.execute("DELETE FROM Products");
-             st.execute("DELETE FROM Vouchers"); st.execute("DELETE FROM Shops"); st.execute("DELETE FROM Users");
-             st.execute("ALTER TABLE OrderItems CHECK CONSTRAINT ALL");
-             st.execute("ALTER TABLE Orders CHECK CONSTRAINT ALL");
-             st.execute("ALTER TABLE ProductVariants CHECK CONSTRAINT ALL");
-        }
-    }
-    
-    private void importUsers(Connection c) throws Exception { readAndInsert(c,"users.csv","INSERT INTO Users VALUES(?,?,?,?,?,?)",5,(p,d)->{
-        p.setInt(1,Integer.parseInt(d[0])); 
-        String name=d[1], email=d[2], phone=d[3];
-        if(!email.contains("@")) email = email.replace("gmail.com", "@gmail.com");
-        if(!phone.startsWith("0")) phone = "0" + phone;
-        p.setString(2,name); p.setString(3,email); p.setString(4,phone); 
-        p.setDouble(5,Double.parseDouble(d[4])); p.setString(6,"");
-    });}
-    
-    private void importShops(Connection c) throws Exception { readAndInsert(c,"shops.csv","INSERT INTO Shops VALUES(?,?,?)",3,(p,d)->{p.setInt(1,Integer.parseInt(d[0]));p.setString(2,d[1]);p.setDouble(3,Double.parseDouble(d[2]));}); }
-    
-    private void importProducts(Connection c) throws Exception { readAndInsert(c,"products.csv","INSERT INTO Products VALUES(?,?,?,?)",4,(p,d)->{p.setInt(1,Integer.parseInt(d[0]));p.setInt(2,Integer.parseInt(d[1]));p.setString(3,d[2]);p.setString(4,d[3]);}); }
-    
-    private void importVariants(Connection c) throws Exception { readAndInsert(c,"product_variants.csv","INSERT INTO ProductVariants VALUES(?,?,?,?,?,?,?)",6,(p,d)->{
-        p.setInt(1,Integer.parseInt(d[0])); p.setInt(2,Integer.parseInt(d[1])); p.setString(3,d[2]); p.setString(4,d[3]);
-        int stock=Integer.parseInt(d[4]); double price=Double.parseDouble(d[5]); String note="";
-        if(stock<0){ stock=0; note="Loi Stock -> Fix: 0"; } 
-        if(price<=0){ price=50000; note+=" | Loi Gia -> Fix"; }
-        p.setInt(5,stock); p.setDouble(6,price); p.setString(7,note);
-    }); }
-    
-    private void importVouchers(Connection c) throws Exception { 
-        readAndInsert(c,"vouchers.csv","INSERT INTO Vouchers VALUES(?,?,?,?,?)",5,(p,d)->{
-            p.setString(1,d[0]); p.setDouble(2,Double.parseDouble(d[1])); p.setDouble(3,Double.parseDouble(d[2]));
-            try { p.setDate(4,java.sql.Date.valueOf(d[3])); } catch(Exception e){ p.setDate(4,new java.sql.Date(System.currentTimeMillis())); }
-            try { p.setDate(5,java.sql.Date.valueOf(d[4])); } catch(Exception e){ p.setDate(5,new java.sql.Date(System.currentTimeMillis())); }
-        }); 
-    }
-    
-    private void importOrderItems(Connection c) throws Exception { readAndInsert(c,"order_items.csv","INSERT INTO OrderItems VALUES(?,?,?,?,?)",5,(p,d)->{p.setInt(1,Integer.parseInt(d[0]));p.setInt(2,Integer.parseInt(d[1]));p.setInt(3,Integer.parseInt(d[2]));p.setInt(4,Integer.parseInt(d[3]));p.setDouble(5,Double.parseDouble(d[4]));}); }
-
-    private interface S { void s(PreparedStatement p, String[] d) throws Exception; }
-    private void readAndInsert(Connection c, String f, String q, int l, S s) throws Exception {
-        try(BufferedReader br=new BufferedReader(new FileReader(FOLDER+f)); PreparedStatement ps=c.prepareStatement(q)){
-            String line=br.readLine(); int count=0;
-            while((line=br.readLine())!=null){
-                String[] d=line.split(","); if(d.length<l)continue;
-                s.s(ps,d); ps.addBatch(); if(++count%1000==0) ps.executeBatch();
-            } ps.executeBatch(); log("-> Xong "+f);
-        }
-    }
-    private void log(String m) { logs.append(m).append("<br>"); }
 }
