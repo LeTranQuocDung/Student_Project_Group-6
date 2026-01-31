@@ -1,217 +1,195 @@
+<%@page import="model.ProductDTO"%>
 <%@page import="model.Admin"%>
 <%@page import="model.User"%>
-<%@page import="java.text.NumberFormat"%>
-<%@page import="java.util.Locale"%>
 <%@page import="java.util.List"%>
-<%@page import="model.ProductDTO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
-    <head>
-        <meta charset="UTF-8">
-        <title>Shopee Fake - Demo Migration</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <style>
-            body { background-color: #f5f5f5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+<head>
+    <meta charset="UTF-8">
+    <title>Shopee Việt Nam | Mua và Bán Trên Ứng Dụng Di Động Hoặc Website</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* 1. CẤU HÌNH CHUNG */
+        body { background-color: #f5f5f5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: rgba(0,0,0,.87); margin: 0; padding: 0; }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; padding: 0; margin: 0; }
 
-            /* HEADER MÀU CAM SHOPEE */
-            .shopee-header {
-                background: linear-gradient(-180deg,#f53d2d,#f63);
-                color: white; padding: 10px 0; margin-bottom: 20px;
-            }
+        /* 2. HEADER */
+        .shopee-top-nav { background: #ee4d2d; color: #fff; font-size: 13px; padding: 5px 0; }
+        .shopee-top-nav a { color: #fff; margin: 0 10px; text-decoration: none; }
+        .shopee-top-nav a:hover { opacity: 0.8; }
 
-            /* CARD SẢN PHẨM */
-            .product-card {
-                background: white; border: 1px solid transparent; transition: transform 0.1s;
-                cursor: pointer; position: relative; margin-bottom: 10px; height: 100%;
-            }
-            .product-card:hover {
-                transform: translateY(-1px); border: 1px solid #ee4d2d; z-index: 1;
-                box-shadow: 0 2px 4px rgba(0,0,0,.1);
-            }
-            .p-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #fafafa; }
-            .p-body { padding: 8px; }
-            .p-name { 
-                font-size: 12px; color: #333; line-height: 14px; height: 28px; 
-                overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-                margin-bottom: 5px;
-            }
-            .p-price { color: #ee4d2d; font-size: 16px; font-weight: bold; }
-            .currency { font-size: 10px; vertical-align: top; text-decoration: underline; }
-            .p-shop { font-size: 10px; color: #888; margin-top: 10px; text-align: right; }
-            .mall-badge { background: #d0011b; color: white; padding: 1px 3px; font-size: 9px; border-radius: 2px; margin-right: 4px; font-weight: bold; }
+        .shopee-header-main { background: linear-gradient(-180deg,#f53d2d,#f63); padding: 15px 0 10px; position: sticky; top: 0; z-index: 100; }
+        .shopee-logo { color: #fff; font-size: 28px; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .shopee-logo i { font-size: 38px; }
 
-            /* Link style cho giỏ hàng */
-            .cart-icon-link { color: white; text-decoration: none; position: relative; font-size: 24px;}
-            .cart-icon-link:hover { color: #f0f0f0; }
-            .cart-badge {
-                position: absolute; top: -5px; right: -10px;
-                background: white; color: #ee4d2d;
-                font-size: 10px; padding: 2px 6px; border-radius: 10px; border: 1px solid #ee4d2d;
-            }
-        </style>
-    </head>
-    <body>
+        .shopee-search-bar { background: #fff; border-radius: 2px; padding: 3px; display: flex; width: 100%; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.09); }
+        .shopee-search-input { border: none; flex: 1; padding: 0 10px; outline: none; }
+        .shopee-search-btn { background: #fb5533; border: none; color: #fff; width: 60px; border-radius: 2px; }
+        .shopee-search-btn:hover { background: #ec4625; }
 
-        <div class="shopee-header sticky-top">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <a href="home" class="text-white text-decoration-none">
-                            <h3 class="fw-bold m-0"><i class="fas fa-shopping-bag"></i> Shopee Fake</h3>
-                        </a>
+        .shopee-cart-icon { color: #fff; font-size: 26px; margin-top: 5px; cursor: pointer; position: relative; margin-left: 20px;}
+        .cart-badge { position: absolute; top: -5px; right: -8px; background: #fff; color: #ee4d2d; border-radius: 40px; padding: 0 6px; font-size: 12px; border: 1px solid #ee4d2d; }
+
+        /* 3. SIDEBAR DANH MỤC */
+        .category-sidebar { background: #fff; border-radius: 2px; margin-top: 20px; }
+        .category-header { font-weight: 700; padding: 15px; border-bottom: 1px solid rgba(0,0,0,.05); display: flex; align-items: center; gap: 10px; font-size: 16px; color: rgba(0,0,0,.8); }
+        .category-list li { padding: 10px 15px; font-size: 14px; cursor: pointer; transition: 0.1s; display: block; color: rgba(0,0,0,.87); }
+        .category-list li:hover { color: #ee4d2d; font-weight: 500; background: #fafafa; }
+        .active-cate { color: #ee4d2d !important; font-weight: bold; }
+
+        /* 4. BANNER & CARD */
+        .shopee-banner { border-radius: 3px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 1px 1px 0 rgba(0,0,0,.05); }
+
+        .shopee-card { 
+            background: #fff; border: 1px solid transparent; border-radius: 2px; 
+            transition: transform .1s, box-shadow .1s; position: relative; height: 100%;
+            display: flex; flex-direction: column; text-decoration: none;
+        }
+        .shopee-card:hover { transform: translateY(-1px); box-shadow: 0 1px 20px 0 rgba(0,0,0,.05); border-color: #ee4d2d; z-index: 2; }
+        .card-img-top { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card-body { padding: 8px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
+        .card-title { font-size: 12px; line-height: 14px; height: 28px; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-bottom: 5px; color: #222; }
+        .card-price { color: #ee4d2d; font-size: 16px; }
+        .sold-count { font-size: 10px; color: rgba(0,0,0,.54); }
+
+        /* BADGES */
+        .badge-mall { position: absolute; top: 0; left: 0; background: #d0011b; color: #fff; font-size: 10px; padding: 0 4px; border-bottom-right-radius: 3px; font-weight: 500; }
+        .badge-sale { position: absolute; top: 0; right: 0; background: rgba(255,212,36,.9); width: 36px; height: 32px; text-align: center; font-size: 10px; padding-top: 2px; }
+        .sale-percent { color: #ee4d2d; font-weight: 700; display: block; }
+        .sale-text { color: #fff; text-transform: uppercase; font-weight: 700; }
+
+        /* 5. FOOTER */
+        .shopee-footer { border-top: 4px solid #ee4d2d; background: #fff; padding: 40px 0; margin-top: 50px; font-size: 14px; color: rgba(0,0,0,.65); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="shopee-top-nav d-none d-md-block">
+            <div class="container d-flex justify-content-between">
+                <div>
+                    <a href="#">Kênh Người Bán</a> <span class="mx-1">|</span>
+                    <a href="#">Tải ứng dụng</a> <span class="mx-1">|</span>
+                    <a href="#">Kết nối <i class="fab fa-facebook"></i></a>
+                </div>
+                <div>
+                    <a href="#"><i class="far fa-bell"></i> Thông báo</a>
+                    <a href="#"><i class="far fa-question-circle"></i> Hỗ trợ</a>
+                    <% User acc = (User) session.getAttribute("account");
+                       if (acc != null) { %>
+                        <span class="text-white ms-3 fw-bold"><%= acc.getFullName() %></span>
+                        <% if ("admin".equalsIgnoreCase(acc.getRole())) { %> <span class="badge bg-warning text-dark ms-1">ADMIN</span> <% } %>
+                        <a href="logout" class="ms-3 fw-bold">Đăng xuất</a>
+                    <% } else { %>
+                        <a href="register" class="fw-bold ms-3">Đăng Ký</a>
+                        <a href="login" class="fw-bold ms-3 border-start ps-3 border-white">Đăng Nhập</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="shopee-header-main">
+            <div class="container d-flex align-items-center gap-4">
+                <a href="home" class="shopee-logo"><i class="fas fa-shopping-bag"></i> Shopee</a>
+                <div class="flex-grow-1">
+                    <form action="search" method="get" class="shopee-search-bar">
+                        <input type="text" name="txt" class="shopee-search-input" 
+                               placeholder="Săn voucher 50k đơn đầu tiên!" 
+                               value="<%= request.getAttribute("txtS") == null ? "" : request.getAttribute("txtS") %>">
+                        <button type="submit" class="shopee-search-btn"><i class="fas fa-search"></i></button>
+                    </form>
+                    <div class="d-flex gap-3 text-white mt-1 small ps-2 opacity-75">
+                        <span>Váy Đầm</span> <span>Áo Thun</span> <span>iPhone 15</span> <span>Túi Xách</span>
                     </div>
+                </div>
+                <div class="shopee-cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-badge">0</span></div>
+            </div>
+        </div>
+    </header>
 
-                    <div class="col-md-6">
-                        <form action="home" method="get">
-                            <div class="input-group">
-                                <input type="text" name="txt" class="form-control border-0" 
-                                       placeholder="Tìm kiếm trong 12.000 sản phẩm..."
-                                       value="<%= request.getAttribute("txtS") != null ? request.getAttribute("txtS") : ""%>">
-                                <button type="submit" class="btn btn-light text-danger"><i class="fas fa-search"></i></button>
-                            </div>
-                        </form>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-2 d-none d-lg-block">
+                <div class="category-sidebar">
+                    <div class="category-header"><i class="fas fa-list"></i> Danh Mục</div>
+                    <ul class="category-list">
+                        <li class="active-cate"><i class="fas fa-caret-right me-2"></i>Tất Cả</li>
+                        <li>Thời Trang Nam</li>
+                        <li>Điện Thoại & Phụ Kiện</li>
+                        <li>Thiết Bị Điện Tử</li>
+                        <li>Máy Tính & Laptop</li>
+                        <li>Đồng Hồ</li>
+                        <li>Nhà Cửa & Đời Sống</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-10">
+                <div id="bannerCarousel" class="carousel slide shopee-banner" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active"><img src="https://cf.shopee.vn/file/vn-50009109-b6c86a23730e7930906296a84d008906_xxhdpi" class="d-block w-100"></div>
+                        <div class="carousel-item"><img src="https://cf.shopee.vn/file/vn-50009109-ec8f121287042a969f6e520970a24080_xxhdpi" class="d-block w-100"></div>
                     </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                </div>
 
-                    <div class="col-md-3 d-flex align-items-center justify-content-end gap-3">
-                        
-                        <a href="#" class="cart-icon-link" onclick="alert('Chức năng Giỏ hàng đang phát triển!')">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-badge">99+</span> 
-                        </a>
-
-                        <% 
-                            // Lấy user từ session (Key là "account" như đã lưu trong Servlet)
-                            User acc = (User) session.getAttribute("account");
-                            
-                            if (acc == null) { 
-                        %>
-                            <a href="login" class="text-white text-decoration-none fw-bold small">Đăng nhập</a>
-                        <% } else { %>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-light dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
-                                    Hi, <%= acc.getFullName() %>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <% 
-                                        // KIỂM TRA: Nếu là Admin mới hiện nút Thêm
-                                        if (acc instanceof Admin) { 
-                                    %>
-                                        <li><a class="dropdown-item fw-bold text-danger" href="#" data-bs-toggle="modal" data-bs-target="#addModal">
-                                            <i class="fas fa-plus"></i> Thêm Sản Phẩm
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
+                <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-2">
+                    <% 
+                       List<ProductDTO> list = (List<ProductDTO>) request.getAttribute("products");
+                       if (list != null && !list.isEmpty()) {
+                            for (ProductDTO p : list) { 
+                    %>
+                    <div class="col">
+                        <a href="product-detail?id=<%= p.getId() %>" class="text-decoration-none">
+                            <div class="shopee-card">
+                                <div class="badge-mall">Yêu thích</div>
+                                <div class="badge-sale"><span class="sale-percent">50%</span><span class="sale-text">GIẢM</span></div>
+                                
+                                <img src="<%= p.getImage() %>" class="card-img-top" alt="<%= p.getName() %>">
+                                
+                                <div class="card-body">
+                                    <div class="card-title"><%= p.getName() %></div>
+                                    <div class="d-flex justify-content-between align-items-baseline mt-auto">
+                                        <div class="card-price">₫<%= String.format("%,.0f", p.getMinPrice()) %></div>
+                                        <div class="sold-count">Đã bán 1k</div>
+                                    </div>
+                                    
+                                    <% if (acc != null && "admin".equalsIgnoreCase(acc.getRole())) { %>
+                                        <div class="mt-2 pt-2 border-top text-center">
+                                            <a href="product-manage?action=delete&id=<%= p.getId() %>" 
+                                               class="text-danger small fw-bold"
+                                               onclick="return confirm('Xóa thật hả?')">Xóa</a>
+                                        </div>
                                     <% } %>
-                                    <li><a class="dropdown-item" href="logout">Đăng xuất</a></li>
-                                </ul>
-                            </div>
-                        <% } %>
-
-                    </div>
-                </div>
-
-                <div class="row mt-2" style="font-size: 12px;">
-                    <div class="col text-white opacity-75">Gợi ý: Áo thun, Dép nam, iPhone 15 Pro Max, Váy xinh, Giày Sneaker...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="container pb-5">
-            <div class="row mb-3">
-                <div class="col-12">
-                    <div class="bg-white p-3 rounded shadow-sm d-flex justify-content-between align-items-center">
-                        <h6 class="text-danger fw-bold m-0">🔥 GỢI Ý HÔM NAY</h6>
-                        <% if (request.getAttribute("txtS") != null && !request.getAttribute("txtS").toString().isEmpty()) {%>
-                        <span class="text-muted small">Kết quả tìm kiếm cho: "<b><%= request.getAttribute("txtS")%></b>"</span>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-2">
-                <%
-                    List<ProductDTO> products = (List<ProductDTO>) request.getAttribute("products");
-                    NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
-
-                    if (products != null && !products.isEmpty()) {
-                        for (ProductDTO p : products) {
-                %>
-                <div class="col-6 col-md-4 col-lg-2">
-                    <div class="product-card position-relative">
-                        
-                        <% if (acc != null && acc instanceof Admin) { %>
-                            <a href="product-manage?action=delete&id=<%= p.getId() %>" 
-                               class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle" 
-                               style="z-index: 10; width: 24px; height: 24px; line-height: 12px; padding: 0; font-size: 12px;" 
-                               onclick="return confirm('Bạn chắc chắn muốn xóa sản phẩm <%= p.getName() %>?')"
-                               title="Xóa sản phẩm">X</a>
-                        <% } %>
-
-                        <img src="<%= p.getImage()%>" class="p-img" alt="<%= p.getName()%>">
-                        <div class="p-body">
-                            <div class="p-name">
-                                <span class="mall-badge">Mall</span><%= p.getName()%>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-end">
-                                <div class="p-price">
-                                    <span class="currency">₫</span><%= formatter.format(p.getMinPrice())%>
-                                </div>
-                                <div class="p-shop">
-                                    <i class="fas fa-store-alt"></i> <%= p.getShopName()%>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
+                    <%      } 
+                       } else { 
+                    %>
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i><p class="text-muted">Chưa có sản phẩm!</p>
+                            <a href="admin-import" class="btn btn-danger btn-sm">Admin Import</a>
+                        </div>
+                    <% } %>
                 </div>
-                <%
-                    }
-                } else {
-                %>
-                <div class="col-12 text-center py-5">
-                    <h3 class="text-muted">Không tìm thấy sản phẩm nào!</h3>
-                    <p>Thử tìm từ khóa khác xem sao...</p>
-                    <a href="home" class="btn btn-primary">Về trang chủ</a>
-                </div>
-                <% }%>
-            </div>
-
-            <div class="text-center mt-4">
-                <button class="btn btn-outline-secondary px-5" onclick="alert('Đã load hết sản phẩm!')">
-                    Xem thêm
-                </button>
             </div>
         </div>
+    </div>
 
-        <div class="modal fade" id="addModal" tabindex="-1">
-            <div class="modal-dialog">
-                <form action="product-manage" method="post" class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Thêm Sản Phẩm Mới</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Tên sản phẩm</label>
-                            <input type="text" name="name" class="form-control" required placeholder="Nhập tên sản phẩm...">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Mô tả</label>
-                            <textarea name="desc" class="form-control" rows="3" placeholder="Mô tả chi tiết..."></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Giá bán dự kiến (VNĐ)</label>
-                             <input type="number" class="form-control" placeholder="100000">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-danger">Lưu sản phẩm</button>
-                    </div>
-                </form>
-            </div>
+    <footer class="shopee-footer">
+        <div class="container text-center">
+            <p>© 2026 Shopee. Tất cả các quyền được bảo lưu.</p>
         </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

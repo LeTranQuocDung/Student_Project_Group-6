@@ -8,32 +8,54 @@ public class ProductDTO {
     private double minPrice;
     private String image;
 
-    public ProductDTO(int id, String name, String shopName, double minPrice) {
+    public ProductDTO() {
+    }
+
+    public ProductDTO(int id, String name, String shopName, double minPrice, String image) {
         this.id = id;
         this.name = name;
         this.shopName = shopName;
         this.minPrice = minPrice;
-        // Random ảnh giả lập để nhìn cho giống thật
-        this.image = "https://placehold.co/300x300/orange/white?text=" + name.replaceAll(" ", "+");
+        this.image = image;
     }
 
     public int getId() {
         return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getShopName() {
         return shopName;
     }
 
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
+    }
+
     public double getMinPrice() {
         return minPrice;
     }
 
+    public void setMinPrice(double minPrice) {
+        this.minPrice = minPrice;
+    }
+
     public String getImage() {
         return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }
