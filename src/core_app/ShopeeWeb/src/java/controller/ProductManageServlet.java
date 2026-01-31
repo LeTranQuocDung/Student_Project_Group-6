@@ -60,4 +60,4 @@ public class ProductManageServlet extends HttpServlet {
         
         resp.sendRedirect("home");
     }
-}
+} 

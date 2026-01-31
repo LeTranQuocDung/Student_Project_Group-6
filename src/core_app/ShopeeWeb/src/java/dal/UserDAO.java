@@ -55,4 +55,32 @@ public class UserDAO extends DBContext {
         }
         return null; // Không tìm thấy hoặc sai pass
     }
+    // 1. Kiểm tra email đã có người dùng chưa
+    public boolean checkEmailExist(String email) {
+        String sql = "SELECT * FROM Users WHERE email = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return true; // Đã tồn tại
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // 2. Lưu tài khoản mới (Mặc định role='user', wallet=0)
+    public void signup(String email, String passHash, String fullName, String phone) {
+        String sql = "INSERT INTO Users (email, password_hash, full_name, phone, role, wallet) VALUES (?, ?, ?, ?, 'user', 0)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setString(2, passHash);
+            ps.setString(3, fullName);
+            ps.setString(4, phone);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

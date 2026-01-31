@@ -2,20 +2,19 @@ package model;
 
 public class User {
 
-    // Sửa thành protected để con (Admin) dùng được
     protected int id;
     protected String fullName;
     protected String email;
     protected String phone;
-    protected double wallet;
+    protected double wallet;      // Thêm ví tiền
     protected String passwordHash;
-    protected String note;
-    protected String role; // <--- Cái ông đang thiếu đây
+    protected String note;        // Thêm ghi chú
+    protected String role;        // Thêm vai trò
 
     public User() {
     }
 
-    // Constructor 8 tham số (Bắt buộc phải có cái này thì Admin mới hết lỗi)
+    // Constructor ĐẦY ĐỦ 8 tham số (Khớp với UserDAO)
     public User(int id, String fullName, String email, String phone, double wallet, String passwordHash, String note, String role) {
         this.id = id;
         this.fullName = fullName;
@@ -27,7 +26,7 @@ public class User {
         this.role = role;
     }
 
-    // --- CÁC GETTER / SETTER ---
+    // Getter & Setter
     public int getId() {
         return id;
     }

@@ -11,6 +11,16 @@
             <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/model/ProductDTO.java</file>
             <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/controller/HomeServlet.java</file>
             <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/web/shopee_home.jsp</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/model/User.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/model/Product.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/dal/DBContext.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/dal/UserDAO.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/dal/ProductDAO.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/controller/LoginServlet.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/controller/LogoutServlet.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/model/Admin.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/src/java/controller/ProductManageServlet.java</file>
+            <file>file:/C:/Users/ACER/OneDrive/Tailieu/NetBeansProjects/ShopeeWeb/web/login.jsp</file>
         </group>
     </open-files>
 </project-private>

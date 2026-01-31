@@ -19,7 +19,7 @@ public class HomeServlet extends HttpServlet {
 
     static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=ShopeeDB;encrypt=true;trustServerCertificate=true";
     static final String USER = "sa";
-    static final String PASS = "trung31102005"; 
+    static final String PASS = "123456"; 
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
