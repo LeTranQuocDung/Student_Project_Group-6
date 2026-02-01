@@ -146,7 +146,7 @@
                             for (ProductDTO p : list) { 
                     %>
                     <div class="col">
-                        <a href="product-detail?id=<%= p.getId() %>" class="text-decoration-none">
+                        <a href="product_detail?id=<%= p.getId() %>" class="text-decoration-none">
                             <div class="shopee-card">
                                 <div class="badge-mall">Yêu thích</div>
                                 <div class="badge-sale"><span class="sale-percent">50%</span><span class="sale-text">GIẢM</span></div>

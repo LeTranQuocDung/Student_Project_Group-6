@@ -15,7 +15,7 @@ public class AdminImportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("admin.jsp").forward(request, response);
+        request.getRequestDispatcher("admin_import.jsp").forward(request, response);
     }
 
     // 2. KHI BẤM NÚT (POST) -> MỚI CHẠY CODE IMPORT

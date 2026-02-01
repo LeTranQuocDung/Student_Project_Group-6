@@ -3,7 +3,6 @@ package controller;
 import dal.UserDAO;
 import model.User;
 import java.io.IOException;
-import java.security.MessageDigest;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,59 +13,34 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
-    // Hàm mã hóa MD5 (Giống trong DataGenerator để khớp với DB)
-    private String getMd5(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] messageDigest = md.digest(input.getBytes());
-            java.math.BigInteger no = new java.math.BigInteger(1, messageDigest);
-            String hashtext = no.toString(16);
-            while (hashtext.length() < 32) {
-                hashtext = "0" + hashtext;
-            }
-            return hashtext;
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    // GET: Mở trang đăng nhập
+    // 1. Vào trang login -> Hiện form
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
-    // POST: Xử lý khi bấm nút "Đăng Nhập"
+    // 2. Bấm nút Đăng nhập -> Xử lý
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        String email = request.getParameter("email");
-        String pass = request.getParameter("password");
-        
-        // 1. Mã hóa pass người dùng nhập để so sánh với pass hash trong DB
-        String passHash = getMd5(pass);
+        String u = request.getParameter("user");
+        String p = request.getParameter("pass");
 
-        // 2. Gọi DAO kiểm tra
+        // Gọi DAO kiểm tra (Ông phải đảm bảo UserDAO có hàm checkLogin hoặc login)
         UserDAO dao = new UserDAO();
-        User user = dao.login(email, passHash); // Hàm này trả về User hoặc Admin tùy role
+        User account = dao.login(u, p); // Hàm này ông tự viết trong DAO nhé
 
-        if (user != null) {
-            // --- ĐĂNG NHẬP THÀNH CÔNG ---
+        if (account != null) {
+            // Đăng nhập thành công -> Lưu vào Session
             HttpSession session = request.getSession();
-            
-            // Lưu nguyên object User (hoặc Admin) vào session
-            // Bên JSP sẽ dùng "account" để lấy ra
-            session.setAttribute("account", user);
-            
-            // Set thời gian sống của session (ví dụ: 30 phút)
-            session.setMaxInactiveInterval(30 * 60);
+            session.setAttribute("account", account);
 
+            // Chuyển về trang chủ
             response.sendRedirect("home");
         } else {
-            // --- ĐĂNG NHẬP THẤT BẠI ---
-            request.setAttribute("mess", "Sai email hoặc mật khẩu!");
+            // Thất bại -> Báo đỏ
+            request.setAttribute("error", "Tài khoản hoặc mật khẩu không đúng!");
             request.getRequestDispatcher("login.jsp").forward(request, response);
         }
     }

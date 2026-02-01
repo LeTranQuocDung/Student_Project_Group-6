@@ -10,31 +10,44 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "ProductDetailServlet", urlPatterns = {"/product-detail"})
+@WebServlet(name = "ProductDetailServlet", urlPatterns = {"/product_detail"})
 public class ProductDetailServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         try {
-            int id = Integer.parseInt(request.getParameter("id"));
+            // 1. Lấy ID sản phẩm từ URL (vd: product-detail?id=5)
+            String idRaw = request.getParameter("id");
+            if (idRaw == null) {
+                response.sendRedirect("home");
+                return;
+            }
+            int id = Integer.parseInt(idRaw);
+
+            // 2. Gọi DAO lấy dữ liệu
             ProductDAO dao = new ProductDAO();
-            
-            // 1. Lấy thông tin sản phẩm
             Product p = dao.getProductById(id);
-            
-            // 2. Lấy danh sách ảnh gallery
+
+            // Nếu không tìm thấy sản phẩm -> Về trang chủ
+            if (p == null) {
+                response.sendRedirect("home");
+                return;
+            }
+
+            // 3. Lấy thêm list ảnh phụ (Gallery)
             List<String> images = dao.getProductImages(id);
-            
-            // 3. Gửi sang JSP
+
+            // 4. Gửi dữ liệu sang JSP
             request.setAttribute("detail", p);
-            request.setAttribute("images", images);
-            
-            request.getRequestDispatcher("product-detail.jsp").forward(request, response);
-            
+            request.setAttribute("listImg", images);
+
+            // 5. Mở trang giao diện
+            request.getRequestDispatcher("product_detail.jsp").forward(request, response);
+
         } catch (Exception e) {
-            // Nếu lỗi ID hoặc không tìm thấy -> Về trang chủ
+            e.printStackTrace();
             response.sendRedirect("home");
         }
     }

@@ -1,235 +1,298 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập tài khoản - Mua sắm Online | Shopee Việt Nam</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        /* 1. RESET & FONT CHUẨN SHOPEE */
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: rgb(238, 77, 45); /* Màu cam chủ đạo */
-            margin: 0;
-            padding: 0;
-        }
+    <head>
+        <meta charset="UTF-8">
+        <title>Đăng nhập | Shopee Việt Nam</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        /* 2. HEADER TRẮNG */
-        .shopee-header {
-            background: #fff;
-            height: 84px;
-            box-shadow: 0 6px 6px -5px rgba(0,0,0,.05);
-            display: flex;
-            align-items: center;
-        }
-        .header-container {
-            width: 1040px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .brand-wrap {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-        }
-        .shopee-logo-icon {
-            color: #ee4d2d;
-            font-size: 40px;
-            margin-right: 15px;
-        }
-        .header-title {
-            font-size: 24px;
-            color: #222;
-            margin-top: 5px;
-        }
-        .help-link {
-            color: #ee4d2d;
-            font-size: 14px;
-            text-decoration: none;
-        }
+        <style>
+            body {
+                background: #f5f5f5;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                overflow-x: hidden;
+            }
 
-        /* 3. BODY (PHẦN GIỮA) */
-        .login-section {
-            background-color: #ee4d2d;
-            min-height: 600px;
-            /* Ảnh nền Shopee thật */
-            background-image: url('https://cf.shopee.vn/file/sg-11134004-7rd70-lvw88x093qf719'); 
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-container {
-            width: 1040px;
-            display: flex;
-            justify-content: flex-end; /* Đẩy form sang phải */
-        }
+            /* HEADER */
+            .login-header {
+                background: #fff;
+                padding: 20px 0;
+                box-shadow: 0 4px 10px rgba(0,0,0,.05);
+            }
+            .shopee-logo {
+                color: #ee4d2d;
+                font-size: 30px;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .page-title {
+                color: #222;
+                font-size: 22px;
+                margin-top: 5px;
+            }
 
-        /* 4. FORM LOGIN BOX */
-        .login-box {
-            background: #fff;
-            width: 400px;
-            border-radius: 4px;
-            padding: 22px 30px;
-            box-shadow: 0 3px 10px 0 rgba(0,0,0,.14);
-            box-sizing: border-box;
-        }
-        .login-title {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: #222;
-            font-weight: 400;
-        }
-        .form-control {
-            border-radius: 2px;
-            height: 40px;
-            font-size: 14px;
-            border: 1px solid #dbdbdb;
-            margin-bottom: 15px;
-        }
-        .form-control:focus {
-            box-shadow: none;
-            border-color: #777;
-        }
-        .btn-primary-shopee {
-            background: #ee4d2d;
-            color: #fff;
-            width: 100%;
-            height: 40px;
-            border: none;
-            border-radius: 2px;
-            font-size: 14px;
-            text-transform: uppercase;
-            margin-top: 10px;
-            cursor: pointer;
-            box-shadow: 0 1px 1px rgba(0,0,0,.09);
-        }
-        .btn-primary-shopee:hover {
-            background: #f05d40;
-        }
-        
-        .links-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        .links-row a { text-decoration: none; color: #05a; }
-        
-        /* DIVIDER */
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-            color: #ccc;
-        }
-        .divider span { width: 100%; border-bottom: 1px solid #dbdbdb; }
-        .divider-text { padding: 0 10px; font-size: 12px; color: #ccc; white-space: nowrap; }
+            /* BODY */
+            .login-body {
+                background-color: #ee4d2d;
+                min-height: 550px;
+                display: flex;
+                align-items: center;
+            }
+            .banner-img {
+                width: 100%;
+                max-width: 550px;
+            }
 
-        /* SOCIAL BUTTONS */
-        .social-btns { display: flex; gap: 10px; }
-        .btn-social {
-            flex: 1; height: 36px; border: 1px solid #dbdbdb; background: #fff;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 2px; font-size: 14px; color: #000; text-decoration: none; cursor: pointer;
-        }
-        .btn-social:hover { background: #f5f5f5; }
-        
-        .register-link {
-            text-align: center; margin-top: 25px; font-size: 14px; color: rgba(0,0,0,.26);
-        }
-        .register-link a { color: #ee4d2d; font-weight: 500; text-decoration: none; }
+            /* CARD LOGIN */
+            .login-card {
+                background: #fff;
+                width: 400px;
+                padding: 30px;
+                border-radius: 4px;
+                box-shadow: 0 3px 10px 0 rgba(0,0,0,.14);
+                margin-left: auto;
+                position: relative;
+            }
+            .login-title {
+                font-size: 20px;
+                color: #222;
+                margin-bottom: 25px;
+                font-weight: 500;
+            }
 
-        /* 5. FOOTER */
-        .footer-shopee {
-            background: #f5f5f5;
-            padding: 40px 0;
-            color: rgba(0,0,0,.54);
-            font-size: 12px;
-            text-align: center;
-        }
-        .footer-policy span { padding: 0 20px; border-right: 1px solid rgba(0,0,0,.09); text-transform: uppercase; }
-        .footer-policy span:last-child { border-right: none; }
-        .company-info { margin-top: 20px; line-height: 1.6; }
-    </style>
-</head>
-<body>
+            .form-control {
+                height: 42px;
+                font-size: 14px;
+                border-radius: 2px;
+            }
+            .form-control:focus {
+                box-shadow: none;
+                border-color: #777;
+            }
 
-    <div class="shopee-header">
-        <div class="header-container">
-            <a href="home" class="brand-wrap">
-                <i class="fas fa-shopping-bag shopee-logo-icon"></i>
-                <span class="header-title">Đăng nhập</span>
-            </a>
-            <a href="#" class="help-link">Bạn cần giúp đỡ?</a>
-        </div>
-    </div>
+            .btn-login {
+                background: #ee4d2d;
+                color: #fff;
+                width: 100%;
+                height: 42px;
+                border: none;
+                border-radius: 2px;
+                font-size: 14px;
+                text-transform: uppercase;
+                margin-top: 15px;
+            }
+            .btn-login:hover {
+                background: #d73211;
+            }
 
-    <div class="login-section">
-        <div class="login-container">
-            <div class="login-box">
-                <div class="login-title">Đăng nhập</div>
-                
-                <% if(request.getAttribute("mess") != null) { %>
-                    <div class="alert alert-danger py-2 mb-3" style="font-size: 12px; background-color:#fff6f7; border-color:#ff424f; color:#222;">
-                        <i class="fas fa-exclamation-circle text-danger"></i> <%= request.getAttribute("mess") %>
-                    </div>
-                <% } %>
+            .separator {
+                display: flex;
+                align-items: center;
+                margin: 20px 0;
+                color: #dbdbdb;
+                font-size: 12px;
+            }
+            .separator::before, .separator::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: #dbdbdb;
+            }
+            .separator span {
+                padding: 0 10px;
+                color: #ccc;
+            }
 
-                <form action="login" method="post">
-                    <input type="text" name="email" class="form-control" placeholder="Email/Số điện thoại/Tên đăng nhập" required>
-                    <input type="password" name="password" class="form-control" placeholder="Mật khẩu" value="admin" required>
-                    
-                    <button type="submit" class="btn-primary-shopee">ĐĂNG NHẬP</button>
-                    
-                    <div class="links-row">
-                        <a href="#">Quên mật khẩu</a>
-                        <a href="#">Đăng nhập với SMS</a>
-                    </div>
+            .social-btns {
+                display: flex;
+                gap: 10px;
+                justify-content: space-between;
+            }
+            .btn-social {
+                flex: 1;
+                height: 40px;
+                border: 1px solid rgba(0,0,0,.26);
+                background: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                font-size: 14px;
+                text-decoration: none;
+                color: #000;
+                border-radius: 2px;
+            }
+            .btn-social:hover {
+                background: #f5f5f5;
+            }
 
-                    <div class="divider">
-                        <span></span><div class="divider-text">HOẶC</div><span></span>
-                    </div>
+            /* QR CODE CORNER (Giả lập giống Shopee) */
+            .qr-corner {
+                position: absolute;
+                top: 0;
+                right: 0;
+                cursor: pointer;
+                width: 70px;
+                height: 70px;
+                background: url('https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/32a93b426038421c.png') no-repeat;
+                background-size: cover;
+                /* Cắt góc tam giác */
+                clip-path: polygon(0 0, 100% 0, 100% 100%);
+            }
+            .qr-tooltip {
+                position: absolute;
+                top: 15px;
+                right: 80px;
+                background: rgba(255, 239, 235, 0.9);
+                border: 2px solid #ffbfb5;
+                color: #ee4d2d;
+                padding: 10px 15px;
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 2px;
+                width: 180px;
+                text-align: center;
+            }
+            .qr-tooltip::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                right: -6px;
+                transform: translateY(-50%);
+                border-width: 6px;
+                border-style: solid;
+                border-color: transparent transparent transparent #ffbfb5;
+            }
 
-                    <div class="social-btns">
-                        <button type="button" class="btn-social">
-                            <i class="fab fa-facebook text-primary me-2"></i> Facebook
-                        </button>
-                        <button type="button" class="btn-social">
-                            <i class="fab fa-google text-danger me-2"></i> Google
-                        </button>
-                    </div>
+            /* Màn hình QR (Ẩn mặc định) */
+            #qr-view {
+                display: none;
+                text-align: center;
+                padding-top: 20px;
+            }
+            .qr-img {
+                width: 180px;
+                height: 180px;
+                margin-bottom: 20px;
+                border: 1px solid #eee;
+                padding: 10px;
+            }
 
-                    <div class="register-link">
-                        Bạn mới biết đến Shopee? <a href="register">Đăng ký</a>
-                    </div>
-                </form>
+        </style>
+    </head>
+    <body>
+
+        <div class="login-header">
+            <div class="container d-flex align-items-center justify-content-between">
+                <a href="home" class="shopee-logo">
+                    <i class="fas fa-shopping-bag"></i> 
+                    <span class="fw-bold">Shopee</span>
+                    <span class="page-title">Đăng nhập</span>
+                </a>
+                <a href="#" class="text-danger text-decoration-none small" onclick="alert('Liên hệ tổng đài 19001221')">Bạn cần giúp đỡ?</a>
             </div>
         </div>
-    </div>
 
-    <div class="footer-shopee">
-        <div class="container">
-            <div class="footer-policy">
-                <span>CHÍNH SÁCH BẢO MẬT</span>
-                <span>QUY CHẾ HOẠT ĐỘNG</span>
-                <span>VẬN CHUYỂN</span>
-                <span>TRẢ HÀNG & HOÀN TIỀN</span>
-            </div>
-            <div class="company-info">
-                <p>Công ty TNHH Shopee</p>
-                <p>Địa chỉ: Tầng 4-5-6, Tòa nhà Capital Place, số 29 đường Liễu Giai, Phường Ngọc Khánh, Quận Ba Đình, Thành phố Hà Nội, Việt Nam.</p>
-                <p>© 2026 Shopee. Tất cả các quyền được bảo lưu.</p>
+        <div class="login-body">
+            <div class="container d-flex justify-content-between align-items-center">
+
+                <div class="d-none d-lg-block text-center text-white">
+                    <img src="https://down-vn.img.susercontent.com/file/sg-11134004-7rd70-luj041g6f4r46c" class="banner-img" alt="Shopee Mall">
+                    <div class="mt-3 fw-bold fs-5">Yêu thích nhất Đông Nam Á</div>
+                </div>
+
+                <div class="login-card">
+                    <div class="qr-corner" onclick="toggleQR()"></div>
+                    <div class="qr-tooltip" id="qr-tooltip">Đăng nhập với mã QR</div>
+
+                    <div id="form-view">
+                        <div class="login-title">Đăng nhập</div>
+
+                        <% String err = (String) request.getAttribute("error");
+                        if (err != null) {%>
+                        <div class="alert alert-danger py-2 small"><i class="fas fa-exclamation-circle"></i> <%= err%></div>
+                        <% }%>
+
+                        <form action="login" method="post">
+                            <div class="mb-3">
+                                <input type="text" name="user" class="form-control" placeholder="Email / Số điện thoại / Tên đăng nhập" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="password" name="pass" class="form-control" placeholder="Mật khẩu" required>
+                            </div>
+
+                            <button type="submit" class="btn-login">Đăng nhập</button>
+                        </form>
+
+                        <div class="d-flex justify-content-between mt-3 small">
+                            <a href="javascript:void(0)" class="text-primary text-decoration-none" onclick="alert('Chức năng Quên mật khẩu đang bảo trì!')">Quên mật khẩu</a>
+                            <a href="javascript:void(0)" class="text-secondary text-decoration-none" onclick="alert('Hệ thống SMS đang hết tiền!')">Đăng nhập với SMS</a>
+                        </div>
+
+                        <div class="separator"><span>HOẶC</span></div>
+
+                        <div class="social-btns">
+                            <a href="javascript:void(0)" class="btn-social" onclick="alert('Cần có API Key Facebook để chạy chức năng này!')">
+                                <i class="fab fa-facebook text-primary"></i> Facebook
+                            </a>
+                            <a href="javascript:void(0)" class="btn-social" onclick="alert('Cần có API Key Google để chạy chức năng này!')">
+                                <i class="fab fa-google text-danger"></i> Google
+                            </a>
+                        </div>
+
+                        <div class="text-center mt-4 small">
+                            <span class="text-muted">Bạn mới biết đến Shopee?</span> 
+                            <a href="register" class="text-danger fw-bold text-decoration-none">Đăng ký</a>
+                        </div>
+                    </div>
+
+                    <div id="qr-view">
+                        <div class="login-title">Đăng nhập với mã QR</div>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" class="qr-img">
+                        <p class="small text-muted">Quét mã QR bằng ứng dụng Shopee</p>
+                        <a href="javascript:void(0)" class="text-primary text-decoration-none small" onclick="alert('Làm sao mà quét thật được ông ơi :))')">Làm sao để quét mã?</a>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-</body>
+        <div class="container py-5 text-center small text-secondary">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <span class="mx-3">CHÍNH SÁCH BẢO MẬT</span>
+                    <span class="mx-3">QUY CHẾ HOẠT ĐỘNG</span>
+                    <span class="mx-3">CHÍNH SÁCH VẬN CHUYỂN</span>
+                </div>
+                <div class="col-12">
+                    <img src="https://down-vn.img.susercontent.com/file/d4bbea4570b93bfd5fc652ca82a262a8" width="100">
+                    <p class="mt-2">© 2026 Shopee. Tất cả các quyền được bảo lưu.</p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let isQR = false;
+            function toggleQR() {
+                isQR = !isQR;
+                let formView = document.getElementById('form-view');
+                let qrView = document.getElementById('qr-view');
+                let tooltip = document.getElementById('qr-tooltip');
+
+                if (isQR) {
+                    // Chuyển sang QR
+                    formView.style.display = 'none';
+                    qrView.style.display = 'block';
+                    tooltip.style.display = 'none'; // Ẩn tooltip khi đang ở chế độ QR
+                } else {
+                    // Chuyển về Form
+                    formView.style.display = 'block';
+                    qrView.style.display = 'none';
+                    tooltip.style.display = 'block';
+                }
+            }
+        </script>
+    </body>
 </html>
