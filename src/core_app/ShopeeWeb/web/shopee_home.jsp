@@ -118,14 +118,19 @@
                 <div class="category-sidebar">
                     <div class="category-header"><i class="fas fa-list"></i> Danh Mục</div>
                     <ul class="category-list">
-                        <li class="active-cate"><i class="fas fa-caret-right me-2"></i>Tất Cả</li>
-                        <li>Thời Trang Nam</li>
-                        <li>Điện Thoại & Phụ Kiện</li>
-                        <li>Thiết Bị Điện Tử</li>
-                        <li>Máy Tính & Laptop</li>
-                        <li>Đồng Hồ</li>
-                        <li>Nhà Cửa & Đời Sống</li>
-                    </ul>
+    <li class="active-cate">
+        <a href="home" style="text-decoration: none; color: inherit; display: block;">
+            <i class="fas fa-caret-right me-2"></i>Tất Cả
+        </a>
+    </li>
+    
+    <li><a href="home?cid=1" style="text-decoration: none; color: inherit; display: block;">Thời Trang Nam</a></li>
+    <li><a href="home?cid=2" style="text-decoration: none; color: inherit; display: block;">Điện Thoại & Phụ Kiện</a></li>
+    <li><a href="home?cid=3" style="text-decoration: none; color: inherit; display: block;">Thiết Bị Điện Tử</a></li>
+    <li><a href="home?cid=4" style="text-decoration: none; color: inherit; display: block;">Máy Tính & Laptop</a></li>
+    <li><a href="home?cid=5" style="text-decoration: none; color: inherit; display: block;">Đồng Hồ</a></li>
+    <li><a href="home?cid=6" style="text-decoration: none; color: inherit; display: block;">Nhà Cửa & Đời Sống</a></li>
+</ul>
                 </div>
             </div>
 

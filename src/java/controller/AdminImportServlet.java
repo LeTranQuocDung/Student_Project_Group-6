@@ -11,30 +11,29 @@ import service.MigrationService;
 @WebServlet(name = "AdminImportServlet", urlPatterns = {"/admin-import"})
 public class AdminImportServlet extends HttpServlet {
 
-    // 1. KHI VÀO TRANG (GET) -> CHỈ HIỆN GIAO DIỆN ADMIN, KHÔNG CHẠY CODE
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Vào trang giao diện import
         request.getRequestDispatcher("admin_import.jsp").forward(request, response);
     }
 
-    // 2. KHI BẤM NÚT (POST) -> MỚI CHẠY CODE IMPORT
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Gọi Service chạy Migration
+            // 1. Chạy logic Import
             MigrationService service = new MigrationService();
             String logs = service.startMigration(); 
             
-            // Gửi log kết quả về lại trang JSP
+            // 2. Gửi log ngược lại trang admin_import.jsp để hiện trong hộp đen
             request.setAttribute("logs", logs);
             
         } catch (Exception e) {
             request.setAttribute("logs", "Lỗi Fatal: " + e.getMessage());
             e.printStackTrace();
         }
-        // Load lại trang admin.jsp để hiện log
+        // 3. QUAN TRỌNG: Forward về admin_import.jsp chứ không phải admin.jsp
         request.getRequestDispatcher("admin_import.jsp").forward(request, response);
     }
 }

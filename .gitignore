@@ -10,3 +10,7 @@
 *.log
 .DS_Store
 Thumbs.db
+/src/core_app/ShopeeWeb/dist/
+/src/core_app/ShopeeWeb/build/web/WEB-INF/build/
+/src/core_app/ShopeeWeb/build/web/WEB-INF/nbproject/private/
+/src/core_app/ShopeeWeb/build/
