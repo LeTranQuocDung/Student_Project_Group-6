@@ -15,28 +15,21 @@ public class HomeServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // 1. Lấy dữ liệu từ URL (ô tìm kiếm hoặc link danh mục)
         String txtSearch = request.getParameter("txt");
-        String categoryIdRaw = request.getParameter("cid"); 
+        String categoryIdRaw = request.getParameter("cid");
 
         ProductDAO dao = new ProductDAO();
         List<ProductDTO> list;
 
-        // 2. Logic phân loại
         if (categoryIdRaw != null && !categoryIdRaw.isEmpty()) {
-            // Nếu có cid -> Lọc theo danh mục
             int cid = Integer.parseInt(categoryIdRaw);
             list = dao.getProductsByCategory(cid);
         } else {
-            // Nếu không có cid -> Lấy tất cả hoặc tìm kiếm bằng chữ
             list = dao.searchProducts(txtSearch);
         }
 
-        // 3. Đẩy sang JSP
         request.setAttribute("products", list);
-        request.setAttribute("txtS", txtSearch); 
-
+        request.setAttribute("txtS", txtSearch);
         request.getRequestDispatcher("shopee_home.jsp").forward(request, response);
     }
 

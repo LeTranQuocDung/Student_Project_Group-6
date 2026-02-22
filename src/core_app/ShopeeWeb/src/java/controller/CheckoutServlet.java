@@ -17,38 +17,42 @@ public class CheckoutServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         Cart cart = (Cart) session.getAttribute("cart");
         User user = (User) session.getAttribute("account");
 
-        // 1. Kiểm tra đăng nhập
         if (user == null) {
-            response.sendRedirect("login.jsp"); // Chưa đăng nhập bắt đi login
+            response.sendRedirect("login.jsp");
             return;
         }
 
-        // 2. Kiểm tra giỏ hàng
         if (cart == null || cart.getItems().isEmpty()) {
             response.sendRedirect("home");
             return;
         }
 
-        // 3. Gọi DAO xử lý Transaction
         try {
             OrderDAO dao = new OrderDAO();
-            dao.addOrder(user, cart); // Hàm Transaction nãy viết
-            
-            // 4. Thành công -> Xóa giỏ hàng
+
+            dao.addOrderTransaction(user, cart);
+
             session.removeAttribute("cart");
-            
-            // 5. Chuyển hướng trang thông báo
+
             response.sendRedirect("checkout_success.jsp");
-            
+
         } catch (Exception e) {
             e.printStackTrace();
-            // Lỗi -> Về lại giỏ hàng và báo lỗi (Ông có thể thêm msg)
-            response.sendRedirect("cart.jsp?error=checkout_failed"); 
+
+            response.sendRedirect("cart.jsp?error=checkout_failed");
         }
+    }
+
+    // Thêm hàm này vào trong CheckoutServlet
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.sendRedirect("cart.jsp");
     }
 }

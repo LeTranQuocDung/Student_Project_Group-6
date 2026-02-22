@@ -30,11 +30,11 @@ public class ProductManageServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Xử lý form thêm sản phẩm
+
         try {
             String name = request.getParameter("name");
             String priceRaw = request.getParameter("price");
-            // Mặc định ảnh nếu không nhập
+
             String image = "https://down-vn.img.susercontent.com/file/sg-11134201-22100-s6q7y2y2mhivda";
 
             double price = 0;
@@ -43,7 +43,7 @@ public class ProductManageServlet extends HttpServlet {
             }
 
             ProductDAO dao = new ProductDAO();
-            // Gọi hàm insert mới (3 tham số)
+
             dao.insertProduct(name, price, image);
 
             response.sendRedirect("home");

@@ -10,13 +10,14 @@ import jakarta.servlet.http.HttpSession;
 
 @WebServlet(name = "LogoutServlet", urlPatterns = {"/logout"})
 public class LogoutServlet extends HttpServlet {
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
-        session.invalidate(); // Lệnh hủy phiên đăng nhập (Xóa sạch session)
-        
-        response.sendRedirect("home"); // Đá về trang chủ
+        session.invalidate();
+
+        response.sendRedirect("home");
     }
 }

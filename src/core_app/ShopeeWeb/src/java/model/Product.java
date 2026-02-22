@@ -3,27 +3,33 @@ package model;
 public class Product {
 
     private int id;
-    private int shopId; // Khớp với cột shop_id trong Database
+    private int shopId;
     private String name;
     private String description;
     private double price;
-    private String imageUrl; // Khớp với hàm setImageUrl bị lỗi
+    private String image;
 
-    // Constructor rỗng (Bắt buộc phải có để DAO dùng)
     public Product() {
     }
 
-    // Constructor đầy đủ
-    public Product(int id, int shopId, String name, String description, double price, String imageUrl) {
+    public Product(int id, int shopId, String name, String description, double price, String image) {
         this.id = id;
         this.shopId = shopId;
         this.name = name;
         this.description = description;
         this.price = price;
-        this.imageUrl = imageUrl;
+        this.image = image;
     }
 
-    // --- CÁC HÀM GETTER & SETTER ---
+    public Product(int id, int shopId, String name, String description) {
+        this.id = id;
+        this.shopId = shopId;
+        this.name = name;
+        this.description = description;
+        this.price = 0;
+        this.image = "https://placehold.co/300";
+    }
+
     public int getId() {
         return id;
     }
@@ -64,11 +70,11 @@ public class Product {
         this.price = price;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getImage() {
+        return image;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImage(String image) {
+        this.image = image;
     }
 }

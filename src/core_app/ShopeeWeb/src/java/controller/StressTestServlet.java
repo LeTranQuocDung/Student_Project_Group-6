@@ -16,16 +16,14 @@ public class StressTestServlet extends HttpServlet {
             throws ServletException, IOException {
 
         StressDAO dao = new StressDAO();
-        int productId = 1; // Test luôn sản phẩm ID 1
+        int productId = 1;
 
-        // Reset kho về 1 nếu có tham số ?reset=true
         if (request.getParameter("reset") != null) {
             dao.resetStock(productId);
             response.getWriter().print("Da reset kho ve 1");
             return;
         }
 
-        // Thực hiện mua hàng
         boolean result = dao.buyProduct(productId);
 
         if (result) {

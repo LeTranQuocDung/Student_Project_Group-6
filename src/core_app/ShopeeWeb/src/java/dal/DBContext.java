@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBContext {
     private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=ShopeeDB;encrypt=true;trustServerCertificate=true";
     private static final String USER = "sa";
-    private static final String PASS = "123456"; // Sửa Pass của ông ở đây
+    private static final String PASS = "123456"; 
 
     public Connection getConnection() {
         try {

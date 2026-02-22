@@ -10,7 +10,7 @@ import java.util.List;
 
 public class ProductDAO extends DBContext {
 
-    // 1. Search cho Home (Trả về DTO)
+  
     public List<ProductDTO> searchProducts(String txtSearch) {
         List<ProductDTO> list = new ArrayList<>();
         String sql = "SELECT TOP 60 p.id, p.name, s.shop_name, MIN(v.price) as min_price, p.image_url "
@@ -44,7 +44,7 @@ public class ProductDAO extends DBContext {
         return list;
     }
 
-    // 2. Get Detail (Trả về Product Full)
+
     public Product getProductById(int id) {
         String sql = "SELECT * FROM Products WHERE id = ?";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -65,7 +65,7 @@ public class ProductDAO extends DBContext {
         return null;
     }
 
-    // 3. Get Images
+
     public List<String> getProductImages(int productId) {
         List<String> list = new ArrayList<>();
         String sql = "SELECT image_url FROM ProductImages WHERE product_id = ?";
@@ -80,7 +80,6 @@ public class ProductDAO extends DBContext {
         return list;
     }
 
-    // 4. Insert (Admin)
     public void insertProduct(String name, double price, String img) {
         String sql = "INSERT INTO Products (shop_id, name, description, price, image_url) VALUES (1, ?, N'Mô tả', ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -93,7 +92,7 @@ public class ProductDAO extends DBContext {
         }
     }
 
-    // 5. Delete
+
     public void deleteProduct(String id) {
         try (Connection conn = getConnection()) {
             conn.prepareStatement("DELETE FROM ProductImages WHERE product_id=" + id).executeUpdate();
@@ -102,5 +101,32 @@ public class ProductDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public List<ProductDTO> getProductsByCategory(int categoryId) {
+        List<ProductDTO> list = new ArrayList<>();
+        String sql = "SELECT TOP 60 p.id, p.name, s.shop_name, MIN(v.price) as min_price, p.image_url "
+                + "FROM Products p "
+                + "JOIN Shops s ON p.shop_id = s.id "
+                + "JOIN ProductVariants v ON p.id = v.product_id "
+                + "WHERE p.category_id = ? "
+                + "GROUP BY p.id, p.name, s.shop_name, p.image_url ORDER BY p.id DESC";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, categoryId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new ProductDTO(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("shop_name"),
+                        rs.getDouble("min_price"),
+                        rs.getString("image_url")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

@@ -6,15 +6,14 @@ public class User {
     protected String fullName;
     protected String email;
     protected String phone;
-    protected double wallet;      // Thêm ví tiền
+    protected double wallet;
     protected String passwordHash;
-    protected String note;        // Thêm ghi chú
-    protected String role;        // Thêm vai trò
+    protected String note;
+    protected String role;
 
     public User() {
     }
 
-    // Constructor ĐẦY ĐỦ 8 tham số (Khớp với UserDAO)
     public User(int id, String fullName, String email, String phone, double wallet, String passwordHash, String note, String role) {
         this.id = id;
         this.fullName = fullName;
@@ -26,7 +25,6 @@ public class User {
         this.role = role;
     }
 
-    // Getter & Setter
     public int getId() {
         return id;
     }

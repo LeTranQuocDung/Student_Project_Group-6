@@ -4,7 +4,7 @@ public class CartItem {
 
     private Product product;
     private int quantity;
-    private double price; // Giá tại thời điểm mua
+    private double price;
 
     public CartItem() {
     }
@@ -15,7 +15,6 @@ public class CartItem {
         this.price = price;
     }
 
-    // Getter & Setter
     public Product getProduct() {
         return product;
     }
@@ -40,7 +39,6 @@ public class CartItem {
         this.price = price;
     }
 
-    // Tính tổng tiền của item này (Giá x Số lượng)
     public double getTotalPrice() {
         return price * quantity;
     }

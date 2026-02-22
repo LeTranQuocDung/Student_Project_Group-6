@@ -3,7 +3,6 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-<<<<<<< HEAD
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/AdminServlet.java</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/web/admin_import.jsp</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/RegisterServlet.java</file>
@@ -20,7 +19,6 @@
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/LogoutServlet.java</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/LoginServlet.java</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/web/home.css</file>
-            <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/dal/QrMemory.java</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/model/Admin.java</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/web/register.jsp</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/web/shopee_home.jsp</file>
@@ -38,14 +36,10 @@
             <file>file:/D:/NetBeansProjects/ShopeeWeb/web/checkout_success.jsp</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/dal/StatsDAO.java</file>
             <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/dal/StressDAO.java</file>
-=======
-            <file>file:/C:/Users/Admin/Downloads/Student_Project_Group-6CI/Student_Project_Group-6-main/src/core_app/ShopeeWeb/src/java/service/DataGenerator.java</file>
-            <file>file:/C:/Users/Admin/Downloads/Student_Project_Group-6CI/Student_Project_Group-6-main/src/core_app/ShopeeWeb/src/java/dal/UserDAO.java</file>
-            <file>file:/C:/Users/Admin/Downloads/Student_Project_Group-6CI/Student_Project_Group-6-main/src/core_app/ShopeeWeb/src/java/controller/AdminImportServlet.java</file>
-            <file>file:/C:/Users/Admin/Downloads/Student_Project_Group-6CI/Student_Project_Group-6-main/src/core_app/ShopeeWeb/src/java/controller/AdminServlet.java</file>
-            <file>file:/C:/Users/Admin/Downloads/Student_Project_Group-6CI/Student_Project_Group-6-main/src/core_app/ShopeeWeb/src/java/controller/HomeServlet.java</file>
-            <file>file:/C:/Users/Admin/Downloads/Student_Project_Group-6CI/Student_Project_Group-6-main/src/core_app/ShopeeWeb/src/java/dal/ProductDAO.java</file>
->>>>>>> 952d7902046e968ee4448480e8fda4074663205e
+            <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/model/ProductDTO.java</file>
+            <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/ApiCheckoutServlet.java</file>
+            <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/ProductManageServlet.java</file>
+            <file>file:/D:/NetBeansProjects/ShopeeWeb/src/java/controller/ProductDetailServlet.java</file>
         </group>
     </open-files>
 </project-private>
