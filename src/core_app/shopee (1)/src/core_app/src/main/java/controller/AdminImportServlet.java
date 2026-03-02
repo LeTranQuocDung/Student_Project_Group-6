@@ -1,0 +1,40 @@
+package controller;
+
+import java.io.IOException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import service.MigrationService;
+
+@WebServlet(name = "AdminImportServlet", urlPatterns = { "/admin-import" })
+public class AdminImportServlet extends HttpServlet {
+
+    // 1. KHI VÀO TRANG (GET) -> CHỈ HIỆN GIAO DIỆN ADMIN, KHÔNG CHẠY CODE
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("admin_import.jsp").forward(request, response);
+    }
+
+    // 2. KHI BẤM NÚT (POST) -> MỚI CHẠY CODE IMPORT
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            // Gọi Service chạy Migration
+            MigrationService service = new MigrationService();
+            String logs = service.startMigration();
+
+            // Gửi log kết quả về lại trang JSP
+            request.setAttribute("logs", logs);
+
+        } catch (Exception e) {
+            request.setAttribute("logs", "Lỗi Fatal: " + e.getMessage());
+            e.printStackTrace();
+        }
+        // Load lại trang admin_import.jsp để hiện log trực tiếp
+        request.getRequestDispatcher("admin_import.jsp").forward(request, response);
+    }
+}

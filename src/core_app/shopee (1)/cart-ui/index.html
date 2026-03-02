@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - E-commerce</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Header Desktop -->
+    <header class="desktop-header desktop-only">
+        <div class="container header-inner">
+            <div class="header-logo">
+                <i class="fa-solid fa-bag-shopping" style="color: var(--primary); font-size: 32px;"></i>
+                <h1 class="header-title">Giỏ Hàng</h1>
+            </div>
+            <div class="header-search">
+                <input type="text" placeholder="Freeship 0Đ (*)" aria-label="Tìm kiếm">
+                <button><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Toggle Button (to simulate opening cart panel) -->
+    <button id="mobileOpenCartBtn" class="mobile-only mobile-open-btn" aria-label="Mở giỏ hàng">
+        <i class="fa-solid fa-cart-shopping"></i> Mở Giỏ Hàng
+    </button>
+
+    <!-- Mobile Cart Overlay -->
+    <div id="cartOverlay" class="cart-overlay" aria-hidden="true"></div>
+
+    <!-- Cart Main Container -->
+    <div id="cartPanel" class="cart-panel">
+
+        <div class="cart-panel-header mobile-only">
+            <h2>Giỏ Hàng (<span id="mobileCartCount">0</span>)</h2>
+            <button id="closeCartBtn" class="close-btn" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="container main-content">
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-cart-arrow-down empty-icon"></i>
+                <p>Giỏ hàng của bạn còn trống</p>
+                <button class="btn-checkout" onclick="window.location.reload()">MUA SẮM NGAY</button>
+            </div>
+
+            <div id="cartContent" class="cart-content">
+                <!-- Desktop Table Header -->
+                <div class="cart-table-header desktop-only">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="selectAllTop" aria-label="Chọn tất cả">
+                        <span class="checkmark"></span>
+                        Sản Phẩm
+                    </label>
+                    <div class="col-price">Đơn Giá</div>
+                    <div class="col-qty">Số Lượng</div>
+                    <div class="col-subtotal">Số Tiền</div>
+                    <div class="col-actions">Thao Tác</div>
+                </div>
+
+                <!-- Rendered Cart Items -->
+                <div id="cartItemsContainer" aria-live="polite">
+                    <div style="padding: 20px; text-align: center; color: var(--text-muted);">Đang tải dữ liệu...</div>
+                </div>
+            </div>
+
+            <!-- Sticky Summary Desktop/Mobile -->
+            <div class="cart-summary sticky-bottom" id="cartSummary">
+                <div class="summary-top">
+                    <div class="voucher-row">
+                        <div class="voucher-left">
+                            <i class="fa-solid fa-ticket" style="color: var(--primary);"></i> Shopee Voucher
+                        </div>
+                        <a href="#" class="link-blue">Chọn hoặc nhập mã</a>
+                    </div>
+                    <div class="coins-row">
+                        <div class="coins-left">
+                            <i class="fa-solid fa-coins" style="color: #f6a700;"></i> Shopee Xu
+                            <span class="coin-hint">Bạn chưa chọn sản phẩm</span>
+                        </div>
+                        <div class="coins-right">-0₫</div>
+                    </div>
+                </div>
+
+                <div class="summary-bottom">
+                    <div class="summary-actions desktop-only">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="selectAllBottom" aria-label="Chọn tất cả">
+                            <span class="checkmark"></span>
+                            Chọn Tất Cả (<span id="totalSelectedCountText">0</span>)
+                        </label>
+                        <button class="btn-text" id="btnDeleteSelected">Xóa</button>
+                        <button class="btn-text highlight">Lưu vào mục Đã thích</button>
+                    </div>
+
+                    <div class="summary-checkout">
+                        <!-- Mobile checkboxes inside checkout area -->
+                        <label class="checkbox-container mobile-only" style="padding-left: 24px;">
+                            <input type="checkbox" id="selectAllMobile" aria-label="Chọn tất cả">
+                            <span class="checkmark"></span>
+                            Tất cả
+                        </label>
+
+                        <div class="total-info">
+                            <div class="shipping-info desktop-only">
+                                <i class="fa-solid fa-truck-fast"></i> Giảm 500.000₫ phí vận chuyển đơn tối thiểu 0₫ <a
+                                    href="#" class="link-blue" style="font-size: 12px;">Tìm hiểu thêm</a>
+                            </div>
+                            <div class="total-price-line">
+                                <span class="total-label">Tổng thanh toán (<span id="totalSelectedCount">0</span> sản
+                                    phẩm):</span>
+                                <span class="total-amount" id="totalAmount">0₫</span>
+                            </div>
+                        </div>
+                        <button id="btnCheckout" class="btn-checkout" disabled>
+                            Mua Hàng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Section -->
+        <div class="container recommended-section">
+            <div class="recommended-header">
+                <h3 style="color: var(--text-muted); font-weight: 500;">CÓ THỂ BẠN CŨNG THÍCH</h3>
+                <a href="#" class="link-orange">Xem Tất Cả <i class="fa-solid fa-chevron-right"
+                        style="font-size: 10px;"></i></a>
+            </div>
+            <div class="recommended-grid" id="recommendedGrid">
+                <!-- Rendered via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Việt Nam | Mua và Bán Trên Ứng Dụng Di Động Hoặc Website</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app">
+        <!-- HEADER -->
+        <header class="header">
+            <!-- Navbar -->
+            <nav class="header__navbar">
+                <ul class="header__navbar-list">
+                    <li class="header__navbar-item header__navbar-item--separate">Kênh Người Bán</li>
+                    <li class="header__navbar-item header__navbar-item--separate">Trở thành Người bán Shopee</li>
+                    <li class="header__navbar-item header__navbar-item--separate">Tải ứng dụng</li>
+                    <li class="header__navbar-item">
+                        Kết nối
+                        <a href="" class="header__navbar-item-link"><i class="fab fa-facebook"></i></a>
+                        <a href="" class="header__navbar-item-link"><i class="fab fa-instagram"></i></a>
+                    </li>
+                </ul>
+
+                <ul class="header__navbar-list">
+                    <li class="header__navbar-item"><i class="far fa-bell"></i> Thông báo</li>
+                    <li class="header__navbar-item"><i class="far fa-question-circle"></i> Hỗ trợ</li>
+                    <li class="header__navbar-item header__navbar-item--separate">Đăng ký</li>
+                    <li class="header__navbar-item">Đăng nhập</li>
+                </ul>
+            </nav>
+
+            <!-- Header with Search -->
+            <div class="header-with-search">
+                <div class="header__logo">
+                    <a href="/" class="header__logo-img-wrapper" style="text-decoration:none;">
+                       <i class="fa-solid fa-bag-shopping"></i> Shopee
+                    </a>
+                </div>
+
+                <div class="header__search">
+                    <div class="header__search-input-wrap">
+                        <input type="text" class="header__search-input" placeholder="Tìm sản phẩm, thương hiệu, và tên shop">
+                    </div>
+                    <button class="header__search-btn">
+                        <i class="fas fa-search header__search-btn-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Cart -->
+                <div class="header__cart">
+                    <div class="header__cart-wrap">
+                        <i class="fas fa-shopping-cart header__cart-icon"></i>
+                        <span class="header__cart-notice">3</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTAINER -->
+        <div class="app__container">
+            <div class="grid">
+                
+                <!-- Flash Sale Banner -->
+                <div class="flash-sale-section">
+                    <div class="flash-sale-header">
+                        <div class="flash-sale-time">
+                            <span style="color:#ee4d2d; font-size:20px; margin-right: 15px;"><i>⚡</i> FLASH SALE</span>
+                            <span class="time-box">12</span> :
+                            <span class="time-box">00</span> :
+                            <span class="time-box">00</span>
+                        </div>
+                        <a href="#" class="see-all">Xem tất cả ></a>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div class="home-product">
+                    <div class="row" id="product-list">
+                        <!-- Danh sách sản phẩm API sẽ Render ra đây -->
+
+                        <!-- Demo 1 Product -->
+                        <div class="col">
+                            <a class="home-product-item" href="#">
+                                <div class="home-product-item__img" style="background-image: url(https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lsthcdtd1iuy6s)"></div>
+                                <h4 class="home-product-item__name">Áo thun nam CANIFA ngắn tay cổ tròn form thường chất cotton</h4>
+                                <div class="home-product-item__price">
+                                    <span class="home-product-item__price-current">₫99.000</span>
+                                </div>
+                                <div class="home-product-item__action">
+                                    <span class="home-product-item__rating">
+                                        <i class="home-product-item__star--gold fas fa-star"></i>
+                                        <i class="home-product-item__star--gold fas fa-star"></i>
+                                        <i class="home-product-item__star--gold fas fa-star"></i>
+                                        <i class="home-product-item__star--gold fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </span>
+                                    <span class="home-product-item__sold">Đã bán 13,2k</span>
+                                </div>
+                                <div class="home-product-item__origin">
+                                    <span>Hà Nội</span>
+                                </div>
+                                <div class="home-product-item__favourite">
+                                    <i class="fas fa-check"></i>
+                                    <span>Yêu thích</span>
+                                </div>
+                                <div class="home-product-item__sale-off">
+                                    <span class="home-product-item__sale-off-percent">10%</span>
+                                    <span class="home-product-item__sale-off-label">GIẢM</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <!-- Lặp lại Demo Product cho đẹp layout -->
+<div class="col"><a class="home-product-item" href="#"><div class="home-product-item__img" style="background-image: url(https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lsthdvbxmb9m1b)"></div><h4 class="home-product-item__name">Áo phông nam nữ tay ngắn cổ tròn form rộng vải dạ quang</h4><div class="home-product-item__price"><span class="home-product-item__price-current">₫120.000</span></div><div class="home-product-item__action"><span class="home-product-item__rating"><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i></span><span class="home-product-item__sold">Đã bán 8,5k</span></div><div class="home-product-item__origin"><span>TP. Hồ Chí Minh</span></div><div class="home-product-item__favourite"><i class="fas fa-check"></i><span>Yêu thích+</span></div></a></div>
+<div class="col"><a class="home-product-item" href="#"><div class="home-product-item__img" style="background-image: url(https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lesz0v9gxy952d)"></div><h4 class="home-product-item__name">Quần Jean Nam Ống Rộng Cao Cấp Trẻ Trung</h4><div class="home-product-item__price"><span class="home-product-item__price-current">₫185.000</span></div><div class="home-product-item__action"><span class="home-product-item__rating"><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="fas fa-star"></i></span><span class="home-product-item__sold">Đã bán 5,1k</span></div><div class="home-product-item__origin"><span>Hà Nội</span></div></a></div>
+<div class="col"><a class="home-product-item" href="#"><div class="home-product-item__img" style="background-image: url(https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lf08p4aaxc7jca)"></div><h4 class="home-product-item__name">Giày Thể Thao Sneaker Nam Nữ</h4><div class="home-product-item__price"><span class="home-product-item__price-current">₫250.000</span></div><div class="home-product-item__action"><span class="home-product-item__rating"><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i></span><span class="home-product-item__sold">Đã bán 2,2k</span></div><div class="home-product-item__origin"><span>Hải Phòng</span></div><div class="home-product-item__sale-off"><span class="home-product-item__sale-off-percent">25%</span><span class="home-product-item__sale-off-label">GIẢM</span></div></a></div>
+<div class="col"><a class="home-product-item" href="#"><div class="home-product-item__img" style="background-image: url(https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lesz0x1z3x4d79)"></div><h4 class="home-product-item__name">Tai nghe không dây Bluetooth 5.0</h4><div class="home-product-item__price"><span class="home-product-item__price-current">₫310.000</span></div><div class="home-product-item__action"><span class="home-product-item__rating"><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="fas fa-star"></i></span><span class="home-product-item__sold">Đã bán 11k</span></div><div class="home-product-item__origin"><span>TP. Hồ Chí Minh</span></div><div class="home-product-item__favourite"><i class="fas fa-check"></i><span>Yêu thích</span></div></a></div>
+<div class="col"><a class="home-product-item" href="#"><div class="home-product-item__img" style="background-image: url(https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ln0x1y6z2a4d79)"></div><h4 class="home-product-item__name">Ốp lưng iPhone 13 14 15 Pro Max</h4><div class="home-product-item__price"><span class="home-product-item__price-current">₫55.000</span></div><div class="home-product-item__action"><span class="home-product-item__rating"><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i><i class="home-product-item__star--gold fas fa-star"></i></span><span class="home-product-item__sold">Đã bán 32k</span></div><div class="home-product-item__origin"><span>Hà Nội</span></div></a></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="grid">
+                <div class="row">
+                    <div class="col" style="width: 25%">
+                        <h3 class="footer__heading">Chăm sóc khách hàng</h3>
+                        <ul class="footer-list">
+                            <li><a href="" class="footer-item__link">Trung tâm trợ giúp</a></li>
+                            <li><a href="" class="footer-item__link">Shopee Blog</a></li>
+                            <li><a href="" class="footer-item__link">Shopee Mall</a></li>
+                            <li><a href="" class="footer-item__link">Hướng dẫn mua hàng</a></li>
+                        </ul>
+                    </div>
+                    <div class="col" style="width: 25%">
+                        <h3 class="footer__heading">Về Shopee</h3>
+                        <ul class="footer-list">
+                            <li><a href="" class="footer-item__link">Giới thiệu</a></li>
+                            <li><a href="" class="footer-item__link">Tuyển dụng</a></li>
+                            <li><a href="" class="footer-item__link">Điều khoản</a></li>
+                        </ul>
+                    </div>
+                    <div class="col" style="width: 25%">
+                        <h3 class="footer__heading">Theo dõi</h3>
+                        <ul class="footer-list">
+                            <li><a href="" class="footer-item__link"><i class="fab fa-facebook" style="font-size: 1.2rem; margin-right: 8px;"></i> Facebook</a></li>
+                            <li><a href="" class="footer-item__link"><i class="fab fa-instagram" style="font-size: 1.2rem; margin-right: 8px;"></i> Instagram</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <div class="grid">
+                    <p class="footer__text">© 2026 Shopee. Tất cả các quyền được bảo lưu.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

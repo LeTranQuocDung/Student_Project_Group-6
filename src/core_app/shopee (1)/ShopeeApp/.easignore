@@ -1,0 +1,13 @@
+# Bỏ qua thư mục cha (backend Java, Tomcat...)
+src/
+*.bat
+*.md
+.git/
+
+# Node modules sẽ được cài lại trên cloud
+node_modules/
+
+# Các file không cần thiết
+*.log
+.expo/
+dist/

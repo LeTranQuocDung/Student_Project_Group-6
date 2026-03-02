@@ -1,0 +1,89 @@
+{
+  "products": [
+    {
+      "id": "p1",
+      "title": "Ốp Lưng iPhone TPU Họa Tiết Da Mềm Mèo Cầm Hoa Chống Sốc,...",
+      "shop": "Shop A",
+      "price": 14900,
+      "price_old": 24900,
+      "qty": 1,
+      "img": "https://placehold.co/80x80/eeeeee/999999?text=Cat+Case",
+      "attributes": "Nền trắng, size 16",
+      "shipping": "Miễn phí",
+      "shop_voucher": "Giảm 5k cho đơn từ 0đ"
+    },
+    {
+      "id": "p2",
+      "title": "Tai nghe bluetooth X bản mới nhất 2025 chống ồn",
+      "shop": "Shop B",
+      "price": 499000,
+      "price_old": null,
+      "qty": 2,
+      "img": "https://placehold.co/80x80/eeeeee/999999?text=Headphones",
+      "attributes": "Bản 2025 màu đen",
+      "shipping": "₫30.000"
+    }
+  ],
+  "suggested_products": [
+    {
+      "id": "s1",
+      "title": "Ốp điện thoại iPhone 16 15 14 13 12 11 Pro Max",
+      "price": 8581,
+      "rating": 4.8,
+      "sold": "4k+",
+      "img": "https://placehold.co/200x200/eeeeee/999999?text=Cover+1",
+      "badge": "Yêu thích",
+      "discount_tag": "-1%"
+    },
+    {
+      "id": "s2",
+      "title": "Kính Cường Lực iPhone KK Cao Cấp",
+      "price": 14500,
+      "rating": 4.8,
+      "sold": "100k+",
+      "img": "https://placehold.co/200x200/eeeeee/999999?text=Glass+2",
+      "badge": "Yêu thích",
+      "discount_tag": "-39%"
+    },
+    {
+      "id": "s3",
+      "title": "Ốp lưng iphone camera viền cao gấu",
+      "price": 13900,
+      "rating": 4.8,
+      "sold": "4k+",
+      "img": "https://placehold.co/200x200/eeeeee/999999?text=Cover+3",
+      "badge": "Yêu thích",
+      "discount_tag": "-54%"
+    },
+    {
+      "id": "s4",
+      "title": "Ốp Lưng iPhone in Full Viền Bóng",
+      "price": 34900,
+      "rating": 4.8,
+      "sold": "4k+",
+      "img": "https://placehold.co/200x200/eeeeee/999999?text=Cover+4",
+      "badge": "Yêu thích",
+      "discount_tag": "-13%"
+    },
+    {
+      "id": "s5",
+      "title": "Ốp Lưng iPhone Shark IMD Cứng Nhám",
+      "price": 15000,
+      "rating": 4.6,
+      "sold": "1k+",
+      "img": "https://placehold.co/200x200/eeeeee/999999?text=Cover+5",
+      "badge": "Yêu thích",
+      "discount_tag": "-46%"
+    },
+    {
+      "id": "s6",
+      "title": "Tất vớ nam nữ thể thao cao cổ",
+      "price": 12000,
+      "rating": 4.9,
+      "sold": "10k+",
+      "img": "https://placehold.co/200x200/eeeeee/999999?text=Socks",
+      "badge": "Yêu thích",
+      "discount_tag": "-25%"
+    }
+  ]
+}
