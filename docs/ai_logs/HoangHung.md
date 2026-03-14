@@ -1092,3 +1092,85 @@ private static void genOrderItems(int count, int maxOrderId, int maxVariantId) {
     } catch (Exception e) { e.printStackTrace(); }
 
 }
+Sửa file shopee_home.jsp Bạn cần tìm đoạn mã đang hiển thị danh sách sản phẩm (vòng lặp for) và chèn thêm một form nhỏ chứa nút bấm vào bên dưới phần giá tiền.
+Vị trí sửa: Tìm đoạn có class="card-body".
+
+HTML
+
+<%= p.getName() %>
+₫<%= String.format("%,.0f", p.getMinPrice()) %>
+Đã bán 1k
+<div class="mt-2">
+    <form action="cart" method="post">
+        <input type="hidden" name="id" value="<%= p.getId() %>">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+        </button>
+    </form>
+</div>
+2. Cập nhật số lượng giỏ hàng trên Header (shopee_home.jsp) Hiện tại biểu tượng giỏ hàng của bạn đang hiển thị số 0 cố định. Hãy sửa nó để hiển thị đúng số lượng thực tế có trong session.
+Vị trí sửa: Tìm đoạn class="shopee-cart-icon".
+
+HTML <% // Lấy giỏ hàng từ session để hiển thị số lượng Cart cartHeader = (Cart) session.getAttribute("cart"); int totalItems = (cartHeader != null) ? cartHeader.getTotalQuantity() : 0; %>
+
+<%= totalItems %>
+3. Sửa logic điều hướng trong CartServlet.java Hiện tại, code trong doPost của CartServlet đang mặc định response.sendRedirect("cart"). Điều này khiến người dùng bị văng từ trang chủ vào trang giỏ hàng mỗi khi bấm nút. Bạn nên sửa để họ ở lại trang hiện tại.
+Vị trí sửa: Thay đổi dòng sendRedirect cuối cùng trong doPost.
+
+Java // Trong file CartServlet.java (phần doPost) try { // ... code lấy id, quantity và thêm vào giỏ giữ nguyên ...
+
+// SỬA DÒNG NÀY:
+// Lấy link của trang mà người dùng vừa đứng (trang chủ hoặc trang detail)
+String referer = request.getHeader("Referer"); 
+
+// Nếu có trang trước đó thì quay lại trang đó, không thì mới về home
+response.sendRedirect(referer != null ? referer : "home");
+} catch (Exception e) { response.sendRedirect("home"); } 4. Thêm một chút CSS (Tùy chọn) Để nút bấm trông đẹp hơn và giống phong cách Shopee, hãy thêm đoạn này vào thẻ <style> của file shopee_home.jsp:
+
+CSS .btn-outline-danger { color: #ee4d2d; border-color: #ee4d2d; font-size: 12px; transition: 0.2s; } .btn-outline-danger:hover { background-color: #ee4d2d; color: #fff; border-color: #ee4d2d; } Lưu ý: Bạn nhớ kiểm tra xem file model.Cart đã có hàm getTotalQuantity() chưa nhé. Nếu chưa, hãy thêm hàm đó vào class Cart để nó cộng dồn tất cả quantity của các CartItem.
+
+Bạn có muốn tôi kiểm tra giúp logic cộng dồn số lượng trong file Cart.java không?
+
+Gemini đã nói Để thêm nút "Thêm vào giỏ hàng" trực tiếp tại trang chủ mà vẫn giữ đúng cấu trúc code hiện tại của bạn, hãy thực hiện sửa tại 3 vị trí sau:
+
+Sửa file shopee_home.jsp (Giao diện) Bạn cần tìm đoạn mã đang sử dụng vòng lặp for để hiển thị danh sách sản phẩm. Chèn thêm một thẻ chứa nút bấm vào bên dưới phần hiển thị giá tiền.
+Vị trí sửa: Tìm đoạn có class="card-body".
+
+HTML
+
+<%= p.getName() %>
+₫<%= String.format("%,.0f", p.getMinPrice()) %>
+Đã bán 1k
+<div class="mt-2">
+    <form action="cart" method="post">
+        <input type="hidden" name="id" value="<%= p.getId() %>">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-size: 12px;">
+            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+        </button>
+    </form>
+</div>
+2. Cập nhật số lượng giỏ hàng trên Header Trong ảnh bạn gửi, phần cart-badge đang để số 0 cố định. Bạn cần dùng scriptlet để lấy tổng số lượng thực tế từ session.
+Vị trí sửa: Tìm đoạn class="shopee-cart-icon".
+
+HTML <% // Lấy giỏ hàng từ session model.Cart cartHeader = (model.Cart) session.getAttribute("cart"); // Nếu giỏ hàng tồn tại thì lấy tổng số lượng, không thì bằng 0 int totalItems = (cartHeader != null) ? cartHeader.getTotalQuantity() : 0; %>
+
+<%= totalItems %>
+3. Sửa logic điều hướng trong CartServlet.java Hiện tại, phương thức doPost của bạn đang mặc định chuyển hướng người dùng sang trang cart (response.sendRedirect("cart")). Điều này sẽ làm người dùng bị mất dấu trang chủ mỗi khi bấm thêm hàng.
+Vị trí sửa: Thay đổi dòng sendRedirect cuối cùng trong doPost.
+
+Java // Trong file CartServlet.java (phần doPost) try { // ... Giữ nguyên logic lấy id, quantity và thêm vào giỏ ...
+
+// THAY DÒNG NÀY:
+// response.sendRedirect("cart"); 
+
+// THÀNH DÒNG NÀY:
+// Quay lại chính trang người dùng vừa đứng (Trang chủ hoặc Trang chi tiết)
+String referer = request.getHeader("Referer"); 
+response.sendRedirect(referer != null ? referer : "home");
+} catch (Exception e) { e.printStackTrace(); response.sendRedirect("home"); } Lưu ý quan trọng Hàm getTotalQuantity(): Đảm bảo class Cart.java của bạn đã có phương thức getTotalQuantity() để cộng dồn tất cả số lượng của các CartItem.
+
+CSS: Bạn có thể thêm đoạn này vào <style> ở trang chủ để nút bấm trông mượt hơn:
+
+CSS .btn-outline-danger:hover { background-color: #ee4d2d !important; color: white !important; } Bạn có muốn tôi hướng dẫn cách dùng AJAX để thêm vào giỏ hàng mà không cần load lại trang (số lượng trên icon tự nhảy) không?
