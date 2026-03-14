@@ -604,3 +604,491 @@ triển khai
 Dự án Shopee Web Clone đã xây dựng thành công một hệ thống thương mại điện tử cơ bản với đầy đủ các chức năng như đăng ký, đăng nhập, quản lý sản phẩm, giỏ hàng và đặt hàng. Hệ thống được phát triển dựa trên kiến trúc MVC, sử dụng Java Servlet, JSP và MySQL để xử lý dữ liệu.
 Bên cạnh đó, dự án còn triển khai các cơ chế quan trọng như quản lý session, xử lý đồng bộ khi nhiều người dùng truy cập cùng lúc và xây dựng hệ thống thống kê dành cho quản trị viên. Những tính năng này giúp hệ thống hoạt động ổn định và mô phỏng được cách hoạt động của các nền tảng thương mại điện tử thực tế.
 Thông qua việc thực hiện dự án này, sinh viên không chỉ nâng cao kỹ năng lập trình Java Web mà còn hiểu rõ hơn về cách xây dựng một hệ thống web hoàn chỉnh, từ tầng giao diện đến tầng dữ liệu và xử lý nghiệp vụ. Đây là nền tảng quan trọng để phát triển các hệ thống phần mềm phức tạp hơn trong tương lai.
+
+Vấn đề lớn nhất hiện tại là file DataGenerator.java của bro chưa sinh ra dữ liệu cho cột category_id, dẫn đến khi MigrationService.java chạy lệnh importProducts, nó sẽ bị lỗi hoặc lệch cột vì bro đang mong đợi 7 cột dữ liệu từ CSV nhưng file thực tế chỉ có 6.
+
+Dưới đây là các bước chỉnh sửa để "full code" phần Category này:
+
+Cập nhật DataGenerator.java Bro cần chỉnh lại hàm genProducts để ghi thêm một cột category_id (giả sử bro có khoảng 5 category).
+Java // Trong DataGenerator.java, sửa lại hàm này: private static void genProducts(int count) { try (BufferedWriter bw = getWriter("products.csv")) { // Thêm category_id vào Header bw.write("id,shop_id,category_id,name,description,price,image_url"); bw.newLine(); for (int i = 1; i <= count; i++) { int shopId = rand.nextInt(TOTAL_SHOPS) + 1; int categoryId = rand.nextInt(5) + 1; // Giả định có 5 loại danh mục double price = (rand.nextInt(500) + 10) * 1000;
+
+        // Ghi đúng 7 cột để khớp với MigrationService
+        bw.write(i + "," + shopId + "," + categoryId + ",San pham " + i + ",Mo ta " + i + "," + price + "," + IMAGES[rand.nextInt(IMAGES.length)]);
+        bw.newLine();
+    }
+    System.out.println("-> Da xong products.csv");
+} catch (Exception e) { e.printStackTrace(); }
+} 2. Kiểm tra MigrationService.java Phần logic importProducts trong code bro gửi đã khá ổn (đã có 7 dấu hỏi), nhưng cần đảm bảo cleanDatabase cũng xóa bảng Categories nếu bro có bảng đó.
+
+Lưu ý quan trọng: Nếu trong DB của bro, bảng Products có Khóa ngoại (Foreign Key) tới bảng Categories, bro phải tạo file categories.csv và import nó TRƯỚC khi import Products.
+
+Java // Sửa lại thứ tự xóa bảng để tránh lỗi Constraint private void cleanDatabase(Connection conn) throws Exception { try (Statement st = conn.createStatement()) { st.execute("sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'"); // Thêm Categories vào danh sách dọn dẹp String[] tables = {"OrderItems", "Orders", "ProductVariants", "Products", "Categories", "Vouchers", "Shops", "Users"}; for (String t : tables) { st.execute("DELETE FROM " + t); try { st.execute("DBCC CHECKIDENT ('" + t + "', RESEED, 0)"); } catch (Exception e) {} } st.execute("sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL'"); log("🧹 Đã dọn sạch DB."); } } 3. Cập nhật Model Product.java Trong code bro gửi, Constructor của Product đang bị gán sai logic (gán categoryId bằng chính nó khi chưa có giá trị truyền vào). Bro nên sửa lại Constructor để nhận đủ tham số.
+
+Java // Sửa constructor trong Product.java public Product(int id, int shopId, int categoryId, String name, String description, double price, String image) { this.id = id; this.shopId = shopId; this.categoryId = categoryId; // Gán từ tham số truyền vào this.name = name; this.description = description; this.price = price; this.image = image; } 4. Cấu trúc bảng SQL gợi ý Để code trên chạy mượt, cấu trúc bảng Products trong SQL Server của bro nên trông như thế này:
+
+SQL CREATE TABLE Categories ( id INT PRIMARY KEY IDENTITY(1,1), name NVARCHAR(255) NOT NULL );
+
+CREATE TABLE Products ( id INT PRIMARY KEY IDENTITY(1,1), shop_id INT, category_id INT, -- Khóa ngoại ở đây name NVARCHAR(255), description NVARCHAR(MAX), price DECIMAL(18,2), image_url VARCHAR(MAX), FOREIGN KEY (category_id) REFERENCES Categories(id) ); Tóm tắt luồng xử lý: Chạy DataGenerator: Tạo ra file products.csv có 7 cột.
+
+Chạy MigrationService: Đọc 7 cột đó và đẩy vào SQL thông qua PreparedStatement.
+
+Sử dụng: Model Product bây giờ đã có categoryId để bro làm tính năng "Lọc theo danh mục".
+
+Bro có muốn tôi viết thêm hàm genCategories để tự động tạo luôn danh sách tên danh mục (như: Điện thoại, Thời trang, v.v.) vào file CSV không?
+
+Bạn đã nói Thêm code này
+
+Gemini đã nói Chào bro, tôi đã đọc qua toàn bộ "kho vũ khí" mà bro vừa gửi (bao gồm các Servlet điều hướng và các DAO xử lý Database). Hệ thống Shopee Simulation của bro hiện tại đã khá đầy đủ từ luồng Login, Cart, Checkout cho đến Admin Dashboard.
+
+Để tích hợp tính năng Category (Danh mục) vào toàn bộ hệ thống này một cách đồng bộ nhất, bro cần thực hiện các chỉnh sửa "full bộ" như sau:
+
+Cập nhật Model & Database (Lớp nền) Để sản phẩm biết mình thuộc danh mục nào, bro cần đồng bộ hóa giữa Model Java và bảng SQL.
+Database: Đảm bảo bảng Products có cột category_id.
+
+Model Product.java: Cập nhật Constructor để gán giá trị cho categoryId.
+
+Java // Sửa constructor trong Product.java public Product(int id, int shopId, int categoryId, String name, String description, double price, String image) { this.id = id; this.shopId = shopId; this.categoryId = categoryId; // Cập nhật dòng này this.name = name; this.description = description; this.price = price; this.image = image; } 2. Cập nhật ProductDAO.java (Trái tim dữ liệu) Bro cần sửa lại các hàm lấy dữ liệu để nó không bỏ sót thông tin danh mục.
+
+getProductById: Thêm cột category_id vào lệnh SELECT để khi vào trang chi tiết, hệ thống biết sản phẩm đó thuộc loại nào.
+
+insertProduct: Chỉnh sửa để khi Admin thêm sản phẩm mới (từ ProductManageServlet), họ có thể chọn danh mục.
+
+Java // Sửa hàm insert trong ProductDAO.java public void insertProduct(String name, double price, String img, int categoryId) { String sql = "INSERT INTO Products (shop_id, category_id, name, description, price, image_url) VALUES (1, ?, ?, N'Mô tả', ?, ?)"; try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) { ps.setInt(1, categoryId); // Thêm CID vào đây ps.setString(2, name); ps.setDouble(3, price); ps.setString(4, img); ps.executeUpdate(); } catch (Exception e) { e.printStackTrace(); } } 3. Điều hướng tại HomeServlet.java File HomeServlet.java bro gửi đã có logic xử lý cid (Category ID) rất tốt. Bro chỉ cần đảm bảo ở file JSP (shopee_home.jsp), các đường link danh mục được truyền đúng tham số:
+
+Ví dụ: Điện thoại.
+
+Xử lý dữ liệu lớn với MigrationService.java Khi bro chạy chức năng "Import Data" từ file CSV, đây là nơi dễ lỗi nhất nếu không khớp cột.
+importProducts: Trong code bro gửi, bro đã chuẩn bị 7 dấu hỏi ?.
+
+Cần chú ý: File products.csv (sinh ra từ DataGenerator.java) PHẢI có đúng 7 cột dữ liệu theo thứ tự: id, shop_id, category_id, name, description, price, image_url.
+
+Một số lưu ý về "Stress Test" (Dành cho LAB211/DBI) Tôi thấy bro có StressDAO.java với hàm buyProduct có Thread.sleep(100). Đây là một "bẫy" điển hình để test lỗi Race Condition (nhiều người mua cùng lúc làm stock bị âm).
+Góp ý: Khi thêm Category, nếu bro muốn làm tính năng nâng cao, hãy thống kê xem Danh mục nào bán chạy nhất dựa trên số lượng OrderItems.
+
+Bro muốn tôi viết thêm một hàm getAllCategories() trong ProductDAO để bro đổ dữ liệu lên Menu ngang của trang chủ Shopee không? Nếu có cái này thì người dùng mới bấm chọn loại sản phẩm được.
+
+Bạn đã nói Full rồi đây
+
+Gemini đã nói Chào bro, bộ code của bro đã "lên kệ" đầy đủ rồi đấy! Với việc bổ sung RegisterServlet để hoàn thiện luồng người dùng và StressTestServlet để kiểm tra độ chịu tải, hệ thống Shopee Simulation này đã sẵn sàng để chạy demo cho đồ án LAB211 hoặc DBI.
+
+Dưới đây là tổng hợp các điểm mấu chốt cuối cùng để bro tích hợp Category (Danh mục) vào "full bộ" code này một cách trơn tru:
+
+Hệ thống hóa Category (Danh mục) Để Menu danh mục hoạt động, bro cần bổ sung một vài chỗ nhỏ sau:
+Cập nhật ProductDAO.java Thêm hàm này để lấy danh sách loại sản phẩm đổ lên giao diện trang chủ:
+
+Java public List getAllCategories() { List list = new ArrayList<>(); String sql = "SELECT * FROM Categories"; try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) { while (rs.next()) { // Giả sử bro đã tạo model Category.java với id và name list.add(new Category(rs.getInt(1), rs.getString(2))); } } catch (Exception e) { e.printStackTrace(); } return list; } Cập nhật HomeServlet.java Đẩy danh sách danh mục sang JSP để hiển thị sidebar/menu:
+
+Java // Trong hàm processRequest của HomeServlet List listC = dao.getAllCategories(); request.setAttribute("listCC", listC); 2. Lưu ý về Cơ chế Stress Test Bro đang sử dụng synchronized trong StressTestServlet.java.
+
+Hiện tại: protected synchronized void doGet(...) sẽ khóa toàn bộ Servlet lại, mỗi thời điểm chỉ có 1 request được xử lý. Điều này giúp ngăn chặn lỗi bán quá số lượng kho (Race Condition) nhưng sẽ làm hệ thống chậm đi khi có nhiều người truy cập cùng lúc.
+
+Mẹo cho LAB211: Nếu giáo viên yêu cầu xử lý ở tầng Database thay vì Java, bro có thể dùng UPDATE ... SET stock = stock - 1 WHERE id = ? AND stock > 0 trong StressDAO.java và bỏ từ khóa synchronized ở Servlet đi.
+
+Tổng kết luồng dữ liệu mới Khi bro thêm Category, sơ đồ quan hệ dữ liệu trong DB của bro sẽ mở rộng như sau:
+
+Kiểm tra Check-list cuối cùng File Cần kiểm tra DataGenerator.java Đã sửa genProducts để ghi 7 cột (thêm category_id) vào CSV chưa? MigrationService.java Đã sửa importProducts để nhận đúng 7 cột dữ liệu chưa? Product.java Constructor đã có tham số int categoryId chưa? shopee_home.jsp Các link danh mục đã để dạng href="home?cid=${c.id}" chưa? Hệ thống của bro hiện tại rất bài bản, từ việc dùng MD5 để bảo mật mật khẩu trong RegisterServlet đến việc quản lý Transaction (commit/rollback) khi thanh toán trong OrderDAO.
+
+Bro có cần tôi hỗ trợ viết file Model Category.java và đoạn code JSP để hiển thị danh mục bên trái trang chủ giống hệt giao diện Shopee không?
+
+Bạn đã nói 🚀 BẮT ĐẦU IMPORT & CLEAN DATA ...
+
+🧹 Đã dọn sạch DB.
+
+-> Xong users.csv (100)
+
+-> Xong shops.csv (10)
+
+-> Xong products.csv (0)
+
+❌ LỖI: The INSERT statement conflicted with the FOREIGN KEY constraint "FK__ProductVa__produ__3F466844". The conflict occurred in database "ShopeeDb", table "dbo.Products", column 'id'. H in ra lỗi này tính sao: Đây là code package controller;
+
+import java.io.IOException;
+
+import jakarta.servlet.ServletException;
+
+import jakarta.servlet.annotation.WebServlet;
+
+import jakarta.servlet.http.HttpServlet;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import service.MigrationService;
+
+@WebServlet(name = "AdminImportServlet", urlPatterns = {"/admin-import"})
+
+public class AdminImportServlet extends HttpServlet {
+
+// 1. KHI VÀO TRANG (GET) -> CHỈ HIỆN GIAO DIỆN ADMIN, KHÔNG CHẠY CODE
+
+@Override
+
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+
+        throws ServletException, IOException {
+
+    request.getRequestDispatcher("admin_import.jsp").forward(request, response);
+
+}
+
+
+
+// 2. KHI BẤM NÚT (POST) -> MỚI CHẠY CODE IMPORT
+
+@Override
+
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+
+        throws ServletException, IOException {
+
+    try {
+
+        // Gọi Service chạy Migration
+
+        MigrationService service = new MigrationService();
+
+        String logs = service.startMigration(); 
+
+        
+
+        // Gửi log kết quả về lại trang JSP
+
+        request.setAttribute("logs", logs);
+
+        
+
+    } catch (Exception e) {
+
+        request.setAttribute("logs", "Lỗi Fatal: " + e.getMessage());
+
+        e.printStackTrace();
+
+    }
+
+    // Load lại trang admin.jsp để hiện log
+
+    request.getRequestDispatcher("admin_import.jsp").forward(request, response);
+
+}
+}
+
+Gemini đã nói Lỗi này nhìn qua là thấy ngay "thủ phạm" rồi bro. Dòng log báo -> Xong products.csv (0) chứng tỏ không có sản phẩm nào được chèn vào DB, sau đó đến bước import ProductVariants thì bị "dội ngược" ra vì biến thể sản phẩm yêu cầu một product_id phải tồn tại trong bảng Products.
+
+Nguyên nhân cốt lõi: Trong code MigrationService.java của bro, hàm importProducts đang mong đợi 7 cột dữ liệu từ CSV:
+
+Java readAndInsert(c, "products.csv", sql, 7, (ps, d) -> { ... }); Nhưng trong file DataGenerator.java cũ mà bro gửi trước đó, hàm genProducts chỉ ghi ra 6 cột. Khi số lượng cột thực tế (d.length) nhỏ hơn minCols (7), hàm readAndInsert sẽ tự động continue (bỏ qua), dẫn đến kết quả là 0 sản phẩm được import.
+
+Cách fix "full bộ" cho bro: Bước 1: Sửa DataGenerator.java (Để tạo ra đủ 7 cột) Bro phải thêm category_id vào file CSV để khớp với logic import.
+
+Java private static void genProducts(int count) { try (BufferedWriter bw = getWriter("products.csv")) { // 1. Header phải đủ 7 cột bw.write("id,shop_id,category_id,name,description,price,image_url"); bw.newLine(); for (int i = 1; i <= count; i++) { int shopId = rand.nextInt(TOTAL_SHOPS) + 1; int categoryId = rand.nextInt(5) + 1; // Giả sử có 5 category double price = (rand.nextInt(500) + 10) * 1000;
+
+        // 2. Data phải ghi đủ 7 cột theo đúng thứ tự
+        bw.write(i + "," + shopId + "," + categoryId + ",San pham " + i + ",Mo ta " + i + "," + price + "," + IMAGES[rand.nextInt(IMAGES.length)]);
+        bw.newLine();
+    }
+    System.out.println("-> Da xong products.csv");
+} catch (Exception e) { e.printStackTrace(); }
+} Bước 2: Kiểm tra lại MigrationService.java Đảm bảo thứ tự gán index trong ps khớp hoàn toàn với vị trí cột trong CSV.
+
+Java readAndInsert(c, "products.csv", sql, 7, (ps, d) -> { ps.setInt(1, Integer.parseInt(d[0])); // id ps.setInt(2, Integer.parseInt(d[1])); // shop_id ps.setInt(3, Integer.parseInt(d[2])); // category_id ps.setString(4, d[3]); // name ps.setString(5, d[4]); // description ps.setDouble(6, Double.parseDouble(d[5])); // price ps.setString(7, d[6]); // image_url }); Bước 3: Thực hiện theo thứ tự Chạy lại file DataGenerator.java để sinh lại bộ dữ liệu mới có cột Category.
+
+Đảm bảo bảng Categories trong SQL của bro đã có sẵn dữ liệu (id từ 1 đến 5) để tránh lỗi khóa ngoại khác.
+
+Bấm nút Import trên giao diện Web.
+
+Mẹo nhỏ cho bro: Trong MigrationService.java, tại hàm readAndInsert, bro nên thêm một dòng log lỗi để nếu có dòng nào bị skip thì mình biết tại sao:
+
+Java if (d.length < minCols) { System.out.println("Skip dòng do thiếu cột: " + line); // Log này sẽ hiện ở Console NetBeans continue; } Bro thử chạy lại DataGenerator rồi báo kết quả tôi xem nhé! Có cần tôi viết thêm code để tự động chèn luôn bảng Categories không?
+
+Bạn đã nói package service;
+
+import java.io.BufferedWriter;
+
+import java.io.File;
+
+import java.io.FileOutputStream;
+
+import java.io.OutputStreamWriter;
+
+import java.nio.charset.StandardCharsets;
+
+import java.util.Random;
+
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
+
+public class DataGenerator {
+
+// 1. NÊN ĐỔI THÀNH D:/data/ nếu ổ C của ông bị chặn quyền ghi (Access Denied)
+
+private static final String FOLDER = "C:/data/"; 
+
+private static final Random rand = new Random();
+
+
+
+// Giảm số lượng xuống một chút để ông test cho nhanh, khi nào ngon thì tăng sau
+
+private static final int TOTAL_USERS = 100;
+
+private static final int TOTAL_SHOPS = 10;
+
+private static final int TOTAL_PRODUCTS = 50;
+
+private static final int TOTAL_VARIANTS = 200;
+
+private static final int TOTAL_ORDERS = 100;
+
+private static final int TOTAL_ITEMS = 300;
+
+
+
+private static final String[] HO = {"Nguyen", "Tran", "Le", "Pham", "Hoang", "Huynh", "Phan", "Vu", "Vo", "Dang"};
+
+private static final String[] DEM = {"Van", "Thi", "Minh", "Duc", "My", "Ngoc", "Quang"};
+
+private static final String[] TEN = {"Anh", "Tuan", "Dung", "Hung", "Long", "Diep", "Lan", "Mai"};
+
+
+
+private static final String[] IMAGES = {
+
+    "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-ll1rvl5558973e",
+
+    "https://down-vn.img.susercontent.com/file/sg-11134201-22100-s6q7y2y2mhivda"
+
+};
+
+
+
+private static final SimpleDateFormat dfStd = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+
+
+public static void main(String[] args) {
+
+    try {
+
+        File dir = new File(FOLDER);
+
+        if (!dir.exists()) {
+
+            boolean created = dir.mkdirs();
+
+            if (created) System.out.println("✅ Da tao thu muc: " + FOLDER);
+
+            else System.out.println("❌ KHONG THE tao thu muc: " + FOLDER + ". Hay kiem tra quyen Admin!");
+
+        }
+
+
+
+        System.out.println("⏳ Dang bat dau tao data...");
+
+
+
+        genUsers(TOTAL_USERS);
+
+        genShops(TOTAL_SHOPS);
+
+        genProducts(TOTAL_PRODUCTS);
+
+        genVariants(TOTAL_VARIANTS);
+
+        genVouchers(20);
+
+        genOrders(TOTAL_ORDERS, TOTAL_USERS);
+
+        genOrderItems(TOTAL_ITEMS, TOTAL_ORDERS, TOTAL_VARIANTS);
+
+
+
+        System.out.println("✅ HOAN THANH! File da nam tai: " + FOLDER);
+
+    } catch (Exception e) {
+
+        System.out.println("❌ LOI NGHIEM TRONG: ");
+
+        e.printStackTrace();
+
+    }
+
+}
+
+
+
+private static BufferedWriter getWriter(String filename) throws Exception {
+
+    return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(FOLDER + filename), StandardCharsets.UTF_8));
+
+}
+
+
+
+private static void genUsers(int count) {
+
+    try (BufferedWriter bw = getWriter("users.csv")) {
+
+        bw.write("id,full_name,email,phone,wallet,password_hash,note");
+
+        bw.newLine();
+
+        for (int i = 1; i <= count; i++) {
+
+            String fullName = HO[rand.nextInt(HO.length)] + " " + TEN[rand.nextInt(TEN.length)];
+
+            String email = "user" + i + "@gmail.com";
+
+            // Lưu pass là MD5 của '1' để khớp với tài khoản alulu của ông
+
+            bw.write(i + "," + fullName + "," + email + ",0912345" + i + "," + (rand.nextInt(100) * 1000) + ",c4ca4238a0b923820dcc509a6f75849b,Note " + i);
+
+            bw.newLine();
+
+        }
+
+        System.out.println("-> Da xong users.csv");
+
+    } catch (Exception e) { e.printStackTrace(); }
+
+}
+
+
+
+private static void genShops(int c) {
+
+    try (BufferedWriter w = getWriter("shops.csv")) {
+
+        w.write("id,shop_name,rating\n");
+
+        for (int i = 1; i <= c; i++) {
+
+            w.write(i + ",Shop " + i + " Official," + (3 + rand.nextDouble() * 2) + "\n");
+
+        }
+
+        System.out.println("-> Da xong shops.csv");
+
+    } catch (Exception e) { e.printStackTrace(); }
+
+}
+private static void genProducts(int count) {
+
+try (BufferedWriter bw = getWriter("products.csv")) {
+
+    // Ghi Header
+
+    bw.write("id,shop_id,name,description,price,image_url");
+
+    bw.newLine();
+
+    for (int i = 1; i <= count; i++) {
+
+        int shopId = rand.nextInt(TOTAL_SHOPS) + 1;
+
+        double price = (rand.nextInt(500) + 10) * 1000;
+
+        // Ghi đúng thứ tự 6 cột
+
+        bw.write(i + "," + shopId + ",San pham " + i + ",Mo ta " + i + "," + price + "," + IMAGES[rand.nextInt(IMAGES.length)]);
+
+        bw.newLine();
+
+    }
+
+} catch (Exception e) { e.printStackTrace(); }
+}
+
+private static void genVariants(int count) {
+
+    try (BufferedWriter bw = getWriter("product_variants.csv")) {
+
+        bw.write("id,product_id,color,size,stock,price,note");
+
+        bw.newLine();
+
+        for (int i = 1; i <= count; i++) {
+
+            int prodId = rand.nextInt(TOTAL_PRODUCTS) + 1;
+
+            bw.write(i + "," + prodId + ",Den,M," + (rand.nextInt(100)) + "," + (rand.nextInt(100) * 1000) + ",Note");
+
+            bw.newLine();
+
+        }
+
+        System.out.println("-> Da xong variants.csv");
+
+    } catch (Exception e) { e.printStackTrace(); }
+
+}
+
+
+
+private static void genVouchers(int c) {
+
+    try (BufferedWriter w = getWriter("vouchers.csv")) {
+
+        w.write("code,value,min_order,start_date,end_date\n");
+
+        for (int i = 1; i <= c; i++) {
+
+            w.write("VOUCHER" + i + ",10000,50000,2026-01-01,2026-12-31\n");
+
+        }
+
+        System.out.println("-> Da xong vouchers.csv");
+
+    } catch (Exception e) { e.printStackTrace(); }
+
+}
+
+
+
+private static void genOrders(int count, int maxUserId) {
+
+    try (BufferedWriter bw = getWriter("orders.csv")) {
+
+        bw.write("id,user_id,total_amount,created_at");
+
+        bw.newLine();
+
+        for (int i = 1; i <= count; i++) {
+
+            bw.write(i + "," + (rand.nextInt(maxUserId) + 1) + "," + (rand.nextInt(1000) * 1000) + ",2026-02-22 10:00:00");
+
+            bw.newLine();
+
+        }
+
+        System.out.println("-> Da xong orders.csv");
+
+    } catch (Exception e) { e.printStackTrace(); }
+
+}
+
+
+
+private static void genOrderItems(int count, int maxOrderId, int maxVariantId) {
+
+    try (BufferedWriter bw = getWriter("order_items.csv")) {
+
+        bw.write("id,order_id,variant_id,quantity,price_at_purchase");
+
+        bw.newLine();
+
+        for (int i = 1; i <= count; i++) {
+
+            bw.write(i + "," + (rand.nextInt(maxOrderId) + 1) + "," + (rand.nextInt(maxVariantId) + 1) + ",1,50000");
+
+            bw.newLine();
+
+        }
+
+        System.out.println("-> Da xong order_items.csv");
+
+    } catch (Exception e) { e.printStackTrace(); }
+
+}
