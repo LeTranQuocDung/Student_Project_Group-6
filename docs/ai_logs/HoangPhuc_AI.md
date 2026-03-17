@@ -3921,4 +3921,1448 @@ Dùng mảng 2 chiều (PROD_TYPES_BY_CAT và BRANDS_BY_CAT) để "bốc" đún
 
 Ghép chuỗi lại để sinh ra một file products.csv gồm đủ 7 cột, với tên sản phẩm khớp 100% với danh mục (ví dụ danh mục số 4 chắc chắn tên là Laptop Dell... chứ không thể là Áo thun).
 
+
+
+
+
+
+
+Check thử sao lỗi và cho code fix đc ko
+
+Gemini đã nói
+Nhìn vào hình ảnh cấu trúc project và code bạn gửi, có một số vấn đề chính khiến code của bạn bị báo lỗi đỏ (dấu gạch chéo đỏ trên file).
+
+1. Phân tích nguyên nhân lỗi
+Lỗi Thư viện (Library): Trong EmailService.java, bạn đang sử dụng javax.mail.*. Tuy nhiên, các Servlet của bạn lại dùng jakarta.servlet.* (Tomcat 10+). Việc trộn lẫn javax và jakarta thường gây xung đột hoặc thiếu thư viện JAR tương ứng trong Build Path.
+
+Lỗi Import: Trong RegisterServlet.java, bạn import util.EmailService. Nếu file EmailService.java đang bị lỗi biên dịch (do thiếu thư viện mail), thì RegisterServlet cũng sẽ bị vạ lây và báo lỗi "không tìm thấy symbol".
+
+Chưa cấu hình Email: Trong EmailService.java, bạn vẫn để your-email@gmail.com và mật khẩu xxxx. Nếu chạy thật, nó sẽ văng lỗi AuthenticationFailedException.
+
+Sai URL: Trong EmailService.java, biến link đang để YourProjectName. Bạn cần đổi nó thành tên context path thực tế của project (ví dụ: ShopeeWeb).
+
+2. Hướng dẫn Fix chi tiết
+Bước 1: Thêm thư viện (Quan trọng nhất)
+Bạn cần tải và add file JAR của Jakarta Mail (thay vì JavaMail cũ) vào thư mục WEB-INF/lib hoặc add vào thư viện của NetBeans/Eclipse.
+
+Tìm từ khóa: jakarta.mail-api và jakarta.mail (phiên bản 2.0.1 trở lên).
+
+Bước 2: Cập nhật EmailService.java
+Tôi đã sửa lại các gói import sang jakarta để đồng bộ với Servlet của bạn và tối ưu lại code:
+
+Java
+package util;
+
+import java.util.Properties;
+import jakarta.mail.*; // Chuyển từ javax sang jakarta
+import jakarta.mail.internet.*;
+
+public class EmailService {
+    public void sendEmail(String to, String token) {
+        // CẤU HÌNH GMAIL
+        final String from = "email_cua_ban@gmail.com"; 
+        final String password = "abcd efgh iklm nopq"; // Mật khẩu ứng dụng 16 số
+
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+
+        // Tạo Session
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(from, password);
+            }
+        });
+
+        try {
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(from));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            message.setSubject("[Shopee Clone] Xac nhan tai khoan");
+            
+            // LƯU Ý: Thay 'ShopeeWeb' bằng tên project của bạn khi chạy trên server
+            String link = "http://localhost:8080/ShopeeWeb/verify?email=" + to + "&token=" + token;
+            
+            String content = "<h3>Chao mung ban!</h3>"
+                    + "<p>Vui long nhan vao link de kich hoat:</p>"
+                    + "<a href='" + link + "'>Xac Thuc Ngay</a>";
+
+            message.setContent(content, "text/html; charset=UTF-8");
+            Transport.send(message);
+            System.out.println("Email sent successfully!");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+}
+Bước 3: Kiểm tra RegisterServlet.java
+Đảm bảo bạn đã import đúng class UserDAO. Nếu UserDAO chưa có hàm signup nhận 5 tham số (có token), bạn phải vào file UserDAO.java để thêm cột token vào câu lệnh INSERT.
+
+3. Những việc bạn cần làm ngay để hết lỗi đỏ:
+Chuột phải vào Project -> Chọn Clean and Build. Đôi khi NetBeans bị "ngáo" cache, cần clean để nó nhận diện lại file.
+
+Kiểm tra file UserDAO.java: Đảm bảo hàm signup đã được cập nhật:
+
+public void signup(String email, String pass, String name, String phone, String token)
+
+Mật khẩu ứng dụng: Bạn không được dùng mật khẩu Gmail chính. Bạn phải vào tài khoản Google -> Bảo mật -> Xác minh 2 lớp -> Mật khẩu ứng dụng (App Password) để lấy mã 16 ký tự.
+
+Bạn có muốn tôi viết giúp code cho file VerifyServlet.java để xử lý khi người dùng click vào link trong email không?
+
+Bạn đã nói
+Cái này la flooix gì ấy
+
+Gemini đã nói
+Lỗi này xảy ra khi bạn đang thực hiện lệnh merge (hoặc pull) trong Git, nhưng trong máy bạn đang có một số file mới phát sinh mà Git chưa quản lý (untracked), và những file này lại trùng tên với các file đang được tải về từ trên server.
+
+Cụ thể, các file gây lỗi nằm trong thư mục build/ của dự án ShopeeWeb. Đây là các file tạm do NetBeans tự động tạo ra khi bạn biên dịch code (build project).
+
+Cách xử lý nhanh nhất
+Bạn cần xóa các file tạm này đi để Git có thể ghi đè dữ liệu mới lên. Có 2 cách:
+
+Cách 1: Xóa thủ công (An toàn nhất)
+Truy cập vào thư mục theo đường dẫn trong thông báo lỗi: src/core_app/ShopeeWeb/build/.
+
+Xóa toàn bộ thư mục build này đi. Đừng lo, khi bạn nhấn "Run" hoặc "Build" trong NetBeans, nó sẽ tự tạo lại thư mục này.
+
+Thực hiện lại lệnh Merge hoặc Pull.
+
+Cách 2: Sử dụng lệnh Git Clean
+Nếu bạn dùng Terminal/Git Bash, hãy chạy lệnh sau để xóa các file untracked:
+
+Bash
+git clean -d -f
+(Lưu ý: Lệnh này sẽ xóa toàn bộ các file chưa được add vào git trong project của bạn).
+
+Giải pháp lâu dài (Nên làm)
+Để không bao giờ bị lỗi này nữa, bạn nên bảo Git lờ đi (ignore) thư mục build vì chúng ta không bao giờ nên đưa các file đã biên dịch lên Git.
+
+Tìm file có tên .gitignore trong thư mục gốc của project (nếu chưa có thì tạo mới).
+
+Thêm dòng này vào cuối file:
+
+Plaintext
+/src/core_app/ShopeeWeb/build/
+Lưu lại và commit file .gitignore này.
+
+Sau khi thực hiện xong, NetBeans có tạo thêm bao nhiêu file trong thư mục build thì Git cũng sẽ mặc kệ và không báo lỗi xung đột nữa.
+
+Bạn có muốn mình hướng dẫn cách xử lý nếu sau khi merge xong mà code vẫn bị lỗi đỏ không?
+
+Bạn đã nói
+Đượi tí gửi full file xem cho dễ, còn nhiều lắm
+
+Gemini đã nói
+Cảm ơn ông, cứ gửi qua tôi check một thể cho. Nhìn qua mấy file Servlet ông gửi thì cấu trúc khá ổn, đúng chuẩn mô hình MVC cho môn LAB211 rồi.
+
+Trong lúc đợi ông gửi thêm các file khác (đặc biệt là các file trong gói dal như UserDAO.java và ProductDAO.java), tôi tóm tắt lại vài điểm mấu chốt để ông đối chiếu xem project có đang khớp không nhé:
+
+1. Về file RegisterServlet.java
+Điểm cộng: Ông dùng Thread để gửi email là rất chuẩn, giúp người dùng không bị treo màn hình khi chờ server SMTP gửi thư.
+
+Cần kiểm tra: Trong hàm doPost, ông gọi dao.signup(email, passHash, fullname, phone, token). Ông nhớ kiểm tra file UserDAO.java xem hàm signup đã nhận đúng 5 tham số này chưa.
+
+2. Về file LoginServlet.java
+Cơ chế: Ông đang dùng MD5 để hash mật khẩu. Nhớ đảm bảo là lúc chạy DataGenerator.java để tạo dữ liệu mẫu, mật khẩu cũng phải được hash bằng MD5 thì mới login được nhé.
+
+Session: Đã có session.setAttribute("account", user), bên các file JSP như shopee_home.jsp ông chỉ cần dùng ${sessionScope.account} là lấy được thông tin người dùng.
+
+3. Về file HomeServlet.java & ProductManageServlet.java
+Home: Đang map vào cả /home và /search, cái này tiện cho việc dùng chung một giao diện hiển thị sản phẩm.
+
+Manage: Hàm deleteProduct đang nhận vào id dạng String. Nếu trong DB cột ID là kiểu int, hãy nhớ ép kiểu (Parse) trong DAO để tránh lỗi SQL.
+
+4. Về file VerifyServlet.java
+File này đóng vai trò quan trọng để kích hoạt tài khoản. Nó sẽ gọi dao.verifyAccount(email, token). Ông cần đảm bảo trong DB có cột status (kiểu bit hoặc int) để chuyển từ 0 (chưa kích hoạt) sang 1 (đã kích hoạt) khi hàm này chạy thành công.
+
+Lưu ý về lỗi Git ban nãy:
+Khi ông merge xong, nếu thấy các file .java bị báo lỗi đỏ ở các dòng import jakarta.*, hãy nhấn chuột phải vào Project ShopeeWeb -> Resolve Data Source Problems hoặc kiểm tra xem đã add thư viện Tomcat (thư viện Servlet API) vào project chưa nhé.
+
+Ông cứ gửi tiếp các file dal (DAO) và model, tôi sẽ giúp ông soi kĩ các câu lệnh SQL xem có khớp với DB không. Đang đợi file của ông đây!
+
+Gemini đã nói
+Chào ông, tôi đã xem qua toàn bộ file ông gửi. Code lần này trông "ra dáng" một hệ thống hoàn chỉnh rồi đấy, đặc biệt là phần MigrationService xử lý dữ liệu từ CSV sang SQL Server rất chi tiết.
+
+Tuy nhiên, có một vài điểm "chết người" cần sửa ngay để project chạy được, tôi sẽ liệt kê theo từng mục cho ông dễ theo dõi:
+
+1. Lỗi Xung Đột Git (Trong ảnh)
+Thông báo lỗi cho thấy ông đang bị kẹt vì các file untracked trong thư mục build/ và một file thư viện mssql-jdbc-13.2.1.jre8.jar.
+
+Nguyên nhân: Thư mục build/ là nơi chứa code đã biên dịch, không nên đưa lên Git. Còn file JAR driver có thể do trên server đã có sẵn phiên bản khác.
+
+Cách fix:
+
+Tắt NetBeans.
+
+Xóa thẳng tay thư mục build/ và dist/ trong project.
+
+Chạy lại lệnh Pull/Merge.
+
+Nhớ thêm /src/core_app/ShopeeWeb/build/ vào file .gitignore như tôi đã dặn ở trên.
+
+2. File DBContext.java (Kết nối Database)
+Lỗi logic: Trong DBContext.java, ông đang để databaseName=ShopeeDB, nhưng trong MigrationService.java ông lại dùng databaseName=guh.
+
+Sửa lỗi: Hãy đảm bảo cả hai file đều trỏ chung về một Database (ví dụ: ShopeeDB). Nếu DB chưa có, ông phải tạo nó trước trong SQL Server Management Studio (SSMS).
+
+3. File EmailService.java (Lỗi thư viện & Cấu hình)
+Đây là file dễ lỗi nhất vì liên quan đến thư viện bên ngoài:
+
+Import: Ông đang dùng javax.mail.*. Nếu ông dùng Tomcat 10+, ông phải đổi hết sang jakarta.mail.* để đồng bộ với các Servlet.
+
+Link xác thực: Đoạn YourProjectName trong biến link cần đổi thành ShopeeWeb để khớp với URL thực tế.
+
+Thư viện: Đảm bảo ông đã add file jakarta.mail-2.x.jar vào project.
+
+4. File UserDAO.java (Login & Register)
+Ông đã sửa rất tốt phần is_verified để ngăn người dùng chưa check mail mà đã đăng nhập được.
+
+Lưu ý: Trong hàm signup, ông đang set role = 'user' mặc định. Điều này đúng, nhưng hãy nhớ nếu muốn test trang Admin, ông phải vào DB sửa tay một account thành role = 'admin'.
+
+Check logic: Trong hàm login, nếu trả về User, ông cần kiểm tra lại class User.java xem các field đã khớp hoàn toàn với ResultSet chưa.
+
+5. File MigrationService.java (Import dữ liệu)
+Phần này ông viết rất "xịn", có cả logic làm sạch dữ liệu (thêm @ cho email, thêm 0 cho số điện thoại).
+
+Reseed Identity: Lệnh DBCC CHECKIDENT (..., RESEED, 0) cực kỳ quan trọng để giữ ID đồng bộ với file CSV, ông giữ nguyên cái này là chuẩn.
+
+Thư mục chứa: Ông đang để D:/data/. Nếu máy khác không có ổ D hoặc thư mục này, code sẽ văng lỗi. Nên dùng đường dẫn tương đối hoặc tạo folder tự động.
+
+Tóm tắt các bước cần làm ngay:
+Xóa thư mục build để giải quyết lỗi Git.
+
+Đổi javax.mail thành jakarta.mail trong EmailService.java.
+
+Kiểm tra lại tên Database giữa DBContext và MigrationService cho khớp nhau.
+
+Clean & Build lại project trong NetBeans.
+
+Ông có muốn tôi viết một đoạn script SQL để tạo bảng (CREATE TABLE) chuẩn cho các file DAO này không? Vì nếu tên cột trong DB lệch một chút so với code là nó báo lỗi SQLException ngay.
+
+Bạn đã nói
+Đây là full, làm cái login có định dạng bắt buộc phải nhập đúng email, gửi mã xác thực thế nào h
+
+Gemini đã nói
+Tôi đã xem qua toàn bộ file JSP và logic xử lý của ông. Để làm tính năng Login bắt buộc nhập đúng định dạng email và xác thực qua mã/link, ông cần kết hợp giữa Validation ở phía Client (JSP) và logic gửi mail ở phía Server.
+
+Dưới đây là cách triển khai chi tiết:
+
+1. Ràng buộc định dạng Email (JSP)
+Trong file login.jsp, ông tìm đến thẻ <input> của email và thêm thuộc tính type="email" kết hợp với pattern. Trình duyệt sẽ tự chặn nếu không đúng định dạng.
+
+HTML
+<input type="email" name="email" class="form-control" 
+       required 
+       placeholder="Email/Số điện thoại/Tên đăng nhập"
+       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+       title="Vui lòng nhập đúng định dạng email (ví dụ: abc@gmail.com)">
+2. Luồng gửi mã/link xác thực (Workflow)
+Ông đã có sẵn RegisterServlet và EmailService. Luồng chạy đúng sẽ như sau:
+
+Đăng ký: Người dùng nhập thông tin -> RegisterServlet tạo 1 mã token ngẫu nhiên -> Lưu vào DB (cột token, is_verified = 0) -> Gửi email chứa link xác thực.
+
+Xác thực: Người dùng check mail, click vào link .../verify?email=...&token=....
+
+Xử lý: VerifyServlet nhận email + token -> Check trong DB -> Nếu khớp thì UPDATE is_verified = 1.
+
+3. Cách gửi mã xác thực (Code Fix)
+Trong RegisterServlet.java ông đã dùng Thread để gửi mail là rất tốt. Để gửi nội dung mail "xịn" hơn, ông cập nhật EmailService.java như sau:
+
+Java
+// Trong EmailService.java
+public void sendEmail(String to, String token) {
+    // ... cấu hình SMTP như cũ ...
+    try {
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(from));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+        message.setSubject("[Shopee] Xác minh địa chỉ Email");
+
+        // Tạo link xác nhận
+        String link = "http://localhost:8080/ShopeeWeb/verify?email=" + to + "&token=" + token;
+
+        // Nội dung HTML có nút bấm
+        String content = "<div style='font-family: Arial; padding: 20px; border: 1px solid #eee;'>"
+                + "<h2 style='color: #ee4d2d;'>Xác nhận đăng ký Shopee</h2>"
+                + "<p>Chào bạn, vui lòng nhấn vào nút bên dưới để kích hoạt tài khoản:</p>"
+                + "<a href='" + link + "' style='background: #ee4d2d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>XÁC THỰC NGAY</a>"
+                + "<p style='margin-top: 20px; font-size: 12px; color: #888;'>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>"
+                + "</div>";
+
+        message.setContent(content, "text/html; charset=UTF-8");
+        Transport.send(message);
+    } catch (Exception e) { e.printStackTrace(); }
+}
+4. Logic tại Login (Quan trọng)
+Trong UserDAO.java, ông phải sửa câu lệnh SQL của hàm login để chỉ cho phép đăng nhập khi đã xác thực. Ông đã làm rồi nhưng tôi nhắc lại để chắc chắn:
+
+Java
+// UserDAO.java
+public User login(String email, String passHash) {
+    // Thêm điều kiện is_verified = 1
+    String sql = "SELECT * FROM Users WHERE email = ? AND password_hash = ? AND is_verified = 1";
+    // ... thực hiện truy vấn ...
+}
+5. Lưu ý về Lỗi "Git Merge" trong ảnh trước
+Để chạy được mượt, ông nhớ làm các bước này:
+
+Xóa thư mục build/: Do NetBeans tự tạo, nó đang gây xung đột khi ông pull code.
+
+Mật khẩu ứng dụng Gmail: Trong EmailService, chỗ password = "xxxx" ông phải dùng App Password (16 ký tự) của Google, không được dùng mật khẩu chính của Gmail.
+
+Context Path: Đảm bảo link trong email (/ShopeeWeb/) khớp với tên dự án ông đang chạy trên Tomcat.
+
+Nếu ông muốn chuyển từ Link xác thực sang Mã OTP (6 số), tôi sẽ hướng dẫn ông sửa lại DB và Servlet để check mã số thay vì check link. Ông thích dùng kiểu nào?
+
+Bạn đã nói
+Cái file regixter hiện lỗi j vậy
+
+Gemini đã nói
+Lỗi đỏ hiện tại trong RegisterServlet.java của ông (như trong ảnh image_78c525.png) xuất phát từ việc ông gọi một hàm chưa tồn tại hoặc sai tên trong UserDAO.
+
+1. Phân tích lỗi cụ thể
+Dựa vào dấu X đỏ tại dòng 57, lỗi là:
+
+
+dao.checkEmailExist(email): Trong file UserDAO.java ông gửi trước đó, tôi không thấy hàm này. Ông mới chỉ viết các hàm login, signup, và verifyAccount.
++1
+
+Cách fix: Ông cần bổ sung hàm checkEmailExist vào class UserDAO để kiểm tra xem email đã có người dùng nào đăng ký chưa.
+
+2. Code bổ sung cho UserDAO.java
+Ông copy đoạn này bỏ vào trong class UserDAO nhé:
+
+Java
+// Kiểm tra email đã tồn tại hay chưa
+public boolean checkEmailExist(String email) {
+    String sql = "SELECT * FROM Users WHERE email = ?";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return true; // Email đã tồn tại
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false; // Email chưa có ai dùng
+}
+3. Fix định dạng Email bắt buộc (Regex)
+Để đảm bảo người dùng nhập đúng định dạng email ngay từ trang đăng ký và đăng nhập, ông hãy sửa các file JSP như sau:
+
+Tại register.jsp:
+Thay đổi ô nhập email thành:
+
+HTML
+<input type="email" name="email" class="form-control" required 
+       placeholder="Email (Tên đăng nhập)"
+       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+       title="Vui lòng nhập đúng định dạng email">
+Tại login.jsp:
+Tương tự, sửa ô nhập email:
+
+HTML
+<input type="email" name="email" class="form-control" 
+       placeholder="Email/Số điện thoại/Tên đăng nhập" required
+       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
+       title="Email không đúng định dạng">
+4. Luồng gửi mã xác thực (Email Verification)
+Trong code RegisterServlet.java của ông đã có luồng gửi mail bằng Thread rất chuẩn rồi:
+
+
+Bước 1: Tạo token ngẫu nhiên bằng UUID.randomUUID().toString().
+
+
+Bước 2: Lưu token và is_verified = 0 vào DB thông qua hàm signup.
+
+Bước 3: EmailService sẽ gửi một link có dạng: http://localhost:8080/ShopeeWeb/verify?email=abc@gmail.com&token=....
+
+
+Bước 4: Khi người dùng click vào link, VerifyServlet sẽ gọi dao.verifyAccount để chuyển is_verified lên 1.
+
+Lưu ý quan trọng: Ông nhớ kiểm tra lại file EmailService.java. Nếu ông dùng Tomcat 10+, hãy đổi import javax.mail.* thành import jakarta.mail.* để hết lỗi đỏ ở file đó nhé.
+
+Sau khi thêm hàm checkEmailExist vào UserDAO, ông nhấn Clean and Build lại project là sẽ hết lỗi đỏ ở RegisterServlet. Ông có muốn tôi kiểm tra thêm file nào nữa không?
+
+Bạn đã nói
+package util;
+
+
+
+import java.util.Properties;
+
+import jakarta.mail.*; // Chuyển từ javax sang jakarta
+
+import jakarta.mail.internet.*;
+
+
+
+public class EmailService {
+
+    public void sendEmail(String to, String token) {
+
+        // CẤU HÌNH GMAIL
+
+        final String from = "email_cua_ban@gmail.com"; 
+
+        final String password = "abcd efgh iklm nopq"; // Mật khẩu ứng dụng 16 số
+
+
+
+        Properties props = new Properties();
+
+        props.put("mail.smtp.host", "smtp.gmail.com");
+
+        props.put("mail.smtp.port", "587");
+
+        props.put("mail.smtp.auth", "true");
+
+        props.put("mail.smtp.starttls.enable", "true");
+
+
+
+        // Tạo Session
+
+        Session session = Session.getInstance(props, new Authenticator() {
+
+            @Override
+
+            protected PasswordAuthentication getPasswordAuthentication() {
+
+                return new PasswordAuthentication(from, password);
+
+            }
+
+        });
+
+
+
+        try {
+
+            Message message = new MimeMessage(session);
+
+            message.setFrom(new InternetAddress(from));
+
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+
+            message.setSubject("[Shopee Clone] Xac nhan tai khoan");
+
+            
+
+            // LƯU Ý: Thay 'ShopeeWeb' bằng tên project của bạn khi chạy trên server
+
+            String link = "http://localhost:8080/ShopeeWeb/verify?email=" + to + "&token=" + token;
+
+            
+
+            String content = "<h3>Chao mung ban!</h3>"
+
+                    + "<p>Vui long nhan vao link de kich hoat:</p>"
+
+                    + "<a href='" + link + "'>Xac Thuc Ngay</a>";
+
+
+
+            message.setContent(content, "text/html; charset=UTF-8");
+
+            Transport.send(message);
+
+            System.out.println("Email sent successfully!");
+
+        } catch (MessagingException e) {
+
+            e.printStackTrace();
+
+        }
+
+    }
+
+} H đến ,lượt cái servicer
+
+Gemini đã nói
+Chào ông, dựa trên code EmailService ông vừa gửi, tôi thấy ông đã cập nhật đúng sang thư viện jakarta.mail. Bây giờ, để hệ thống hoạt động trơn tru, tôi sẽ hướng dẫn ông kiểm tra và hoàn thiện nốt phần Service (cụ thể là MigrationService) và cách kết nối nó với Servlet.
+
+Dưới đây là các điểm cần lưu ý và code bổ sung để phần Service của ông chạy mượt:
+
+1. Cấu hình đường dẫn trong MigrationService.java
+Ông cần đảm bảo đường dẫn thư mục chứa file CSV khớp với thực tế trên máy ông.
+
+
+Lưu ý: Nếu máy ông không có ổ D:/, code sẽ báo lỗi FileNotFoundException.
+
+
+Fix: Ông có thể đổi FOLDER thành một đường dẫn linh hoạt hơn hoặc tạo folder tự động nếu chưa có.
+
+2. Sửa lỗi logic Import trong MigrationService
+Trong code importUsers, ông đang xử lý làm sạch data cho Email và Phone. Ông nên thêm bước kiểm tra xem email có bị trống không trước khi replace:
+
+Java
+// Trong MigrationService.java -> importUsers
+private void importUsers(Connection c) throws Exception {
+    String sql = "INSERT INTO Users (full_name, email, phone, wallet, password_hash, note, role, is_verified) VALUES (?,?,?,?,?,?,?,1)"; // Mặc định dữ liệu mẫu là đã xác thực
+    
+    readAndInsert(c, "users.csv", sql, 7, (ps, d) -> {
+        String email = d[2];
+        String phone = d[3];
+        
+        // Làm sạch dữ liệu 
+        if (email != null && !email.contains("@")) {
+            email = email.replace("gmail.com", "@gmail.com");
+        }
+        if (phone != null && !phone.startsWith("0")) {
+            phone = "0" + phone;
+        }
+
+        ps.setString(1, d[1]); // full_name
+        ps.setString(2, email);
+        ps.setString(3, phone);
+        ps.setDouble(4, Double.parseDouble(d[4])); // wallet
+        ps.setString(5, d[5]); // password_hash
+        ps.setString(6, d[6]); // note
+        ps.setString(7, "user"); // role
+    });
+}
+3. Kết nối Service với AdminImportServlet.java
+Để nút bấm trên trang Admin hoạt động, Servlet cần gọi đúng hàm startMigration().
+
+
+Tại admin.jsp: Nút bấm sẽ gửi request POST đến /admin-import.
+
+
+Tại Servlet: Nó sẽ khởi tạo MigrationService và nhận về chuỗi logs để hiển thị lên màn hình log-box.
+
+4. Kiểm tra file DataGenerator.java
+Ông cần chạy file này trước khi thực hiện Import để đảm bảo thư mục D:/data/ có đầy đủ các file CSV.
+
+File này sẽ tạo ra 10,000 Users và 5,000 Products mẫu.
+
+Mật khẩu của các User mẫu này sẽ là Pass1, Pass2,... được mã hóa MD5.
+
+5. Khắc phục lỗi Git (Dựa trên ảnh lỗi của ông)
+Cái lỗi untracked working tree files vẫn sẽ ngăn ông chạy code mới nếu chưa xử lý xong.
+
+
+Bước 1: Vào thư mục project, xóa hẳn thư mục build/.
+
+
+Bước 2: Xóa file mssql-jdbc-13.2.1.jre8.jar trong thư mục lib nếu nó đang báo xung đột.
+
+Bước 3: Thực hiện Git Pull hoặc Merge lại.
+
+Bước tiếp theo cho ông:
+Ông hãy chạy thử file DataGenerator.java để tạo dữ liệu, sau đó vào trang Admin bấm nút "Bắt đầu Import". Nếu có lỗi đỏ hiện ra trong khung đen (Log Box), hãy copy nội dung đó gửi tôi check tiếp nhé.
+
+Ông có cần tôi viết thêm code cho phần xử lý Voucher hay Giỏ hàng (Cart) trong Service không?
+
+Bạn đã nói
+clean file rồi, nó ra mấy chỗ anyf lỗi
+
+Gemini đã nói
+Chào ông, sau khi ông "clean" (xoá các file build/ và dist/) để xử lý lỗi Git, các file Java báo lỗi đỏ là do NetBeans chưa nhận diện lại thư viện hoặc code đang bị lệch pha giữa các class.
+
+Dựa trên các ảnh ông vừa gửi, đây là cách fix dứt điểm cho từng file:
+
+1. Sửa lỗi trong RegisterServlet.java (Ảnh 2)
+Dòng 57 báo lỗi đỏ ở dao.checkEmailExist(email) vì trong class UserDAO của ông chưa có hàm này.
+
+Cách fix: Ông mở file UserDAO.java lên và dán thêm đoạn code này vào:
+
+Java
+public boolean checkEmailExist(String email) {
+    String sql = "SELECT * FROM Users WHERE email = ?";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        return rs.next(); // Nếu có dữ liệu trả về true (đã tồn tại)
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+2. Sửa lỗi trong EmailService.java (Ảnh 3)
+File này báo lỗi đỏ hàng loạt ở các chữ Session, Message, MimeMessage,... là do thiếu thư viện Jakarta Mail.
+
+Cách fix:
+
+Thêm thư viện: Ông cần tải file jakarta.mail-2.0.1.jar (hoặc bản mới hơn). Chuột phải vào thư mục Libraries trong project NetBeans -> chọn Add JAR/Folder -> Trỏ đến file JAR vừa tải.
+
+Sửa lỗi Authenticator: Ở dòng 19, chỗ new Authenticator(), NetBeans đang gạch đỏ vì nó không biết Authenticator thuộc gói nào. Ông hãy nhấn Ctrl + Shift + I để NetBeans tự động thêm các dòng import còn thiếu.
+
+Lưu ý: Đảm bảo dòng import đầu file là import jakarta.mail.*; chứ không phải javax.mail.*;.
+
+3. Giải quyết lỗi Git Merge (Ảnh 1)
+Ảnh 1 cho thấy ông vẫn chưa Merge thành công vì còn file mssql-jdbc-13.2.1.jre8.jar đang nằm trong thư mục lib.
+
+Cách fix:
+
+Vào thư mục src/core_app/ShopeeWeb/lib/ trên máy tính.
+
+Xoá tạm thời file mssql-jdbc-13.2.1.jre8.jar.
+
+Quay lại Git và thực hiện lệnh Merge/Pull lần nữa. Sau khi thành công, Git sẽ tự động tải bản driver đúng từ server về cho ông.
+
+Tóm tắt các bước để project "xanh" trở lại:
+Bước 1: Xoá file driver SQL trong thư mục lib để Merge Git thành công.
+
+Bước 2: Thêm hàm checkEmailExist vào UserDAO.java.
+
+Bước 3: Add thư viện jakarta.mail.jar vào mục Libraries của project.
+
+Bước 4: Chuột phải vào Project ShopeeWeb -> chọn Clean and Build.
+
+Ông làm xong các bước này, nếu vẫn còn dòng nào đỏ thì cứ chụp màn hình tôi chỉ tiếp nhé. Sắp chạy được rồi đấy!
+
+Ông có muốn tôi check luôn file MigrationService xem có bị lỗi thư viện đọc file CSV không?
+
+Bạn đã nói
+Mà mấy file vừa gửi đã có xác thực email hay gì chưa
+
+Gemini đã nói
+Trong các file ông vừa gửi, luồng xác thực email đã được viết rồi, nhưng nó đang nằm rải rác ở các file và có một số chỗ ông cần bổ sung thì nó mới chạy thực tế được.
+
+Cụ thể tình trạng các file của ông như sau:
+
+1. RegisterServlet.java (Đã có logic gửi mail)
+Tình trạng: Tốt.
+
+Cơ chế: Khi người dùng bấm đăng ký, servlet này đã có code tạo ra một cái token ngẫu nhiên, sau đó mở một luồng riêng (new Thread) để gọi EmailService gửi mail đi.
+
+2. EmailService.java (Đã có khung gửi mail)
+Tình trạng: Cần sửa nội dung.
+
+Vấn đề: Trong file ông gửi, cái link xác thực đang để là:
+String link = "http://localhost:8080/YourProjectName/verify?email=" + ...
+
+Cần làm: Ông phải đổi YourProjectName thành tên project của ông (thường là ShopeeWeb) thì khi người dùng click vào mail nó mới tìm thấy Servlet xác thực.
+
+3. UserDAO.java (Đã có hàm xác thực)
+Tình trạng: Tốt.
+
+Cơ chế: Đã có hàm verifyAccount(email, token) để update cột is_verified = 1 trong Database.
+
+Lưu ý: Hàm login của ông cũng đã thông minh ở chỗ chỉ cho phép đăng nhập nếu is_verified = 1.
+
+4. VerifyServlet.java (Đã có file xử lý link click)
+Tình trạng: Tốt.
+
+Cơ chế: Đây là nơi đón người dùng khi họ click vào link trong Gmail. Nó gọi dao.verifyAccount và đá người dùng về trang login kèm thông báo thành công.
+
+⚠️ Những thứ ông CẦN LÀM ngay để xác thực chạy được:
+Cấu hình mật khẩu Gmail (Quan trọng nhất):
+Trong file EmailService.java, ông phải điền email của ông và Mật khẩu ứng dụng (App Password) 16 ký tự của Google vào đây:
+
+Java
+final String from = "email_cua_ban@gmail.com"; 
+final String password = "abcd efgh iklm nopq"; // Không phải mật khẩu đăng nhập Gmail đâu nhé
+Sửa link trong EmailService.java:
+Tìm dòng tạo biến link và sửa lại cho đúng tên project:
+
+Java
+String link = "http://localhost:8080/ShopeeWeb/verify?email=" + to + "&token=" + token;
+Bổ sung thư viện:
+Nếu file EmailService vẫn báo lỗi đỏ ở các chữ Message, Session, ông phải chuột phải vào project -> Add JAR -> chọn file jakarta.mail-2.0.1.jar.
+
+Tóm lại: Code thì có đủ các bộ phận rồi, nhưng ông cần lắp pin (App Password) và chỉnh đúng địa chỉ nhà (Project Name trong link) thì email mới bay về máy người dùng được. Ông đã biết cách tạo "Mật khẩu ứng dụng" của Gmail chưa?
+
+Bạn đã nói
+Đợi tí, cái chỗ mã hóa paswor dnawmf ở fil nào vậy
+
+Gemini đã nói
+Chỗ mã hóa mật khẩu (Password Hashing) trong dự án của ông hiện đang nằm ở 3 file khác nhau để đảm bảo tính đồng bộ từ lúc tạo dữ liệu, đăng ký cho đến khi đăng nhập:
+
+1. File LoginServlet.java
+Tại đây, mật khẩu người dùng nhập vào từ form được mã hóa MD5 trước khi mang đi so sánh với dữ liệu trong Database.
++1
+
+
+Vị trí: Hàm getMd5(String input).
++1
+
+
+Cách dùng: Trong hàm doPost, biến passHash được tạo ra để gọi dao.login(email, passHash).
++1
+
+2. File RegisterServlet.java
+Khi người dùng đăng ký tài khoản mới, mật khẩu họ nhập cũng phải được mã hóa ngay lập tức trước khi lưu vào bảng Users.
++1
+
+
+Vị trí: Hàm getMd5(String input) (nằm ở cuối file Servlet).
+
+
+Cách dùng: Mã hóa pass thành passHash rồi mới truyền vào hàm dao.signup(...).
+
+3. File DataGenerator.java (Cực kỳ quan trọng)
+Đây là file thuộc phần Service dùng để tạo 10,000 người dùng mẫu (dirty data) vào file CSV.
++1
+
+
+Vị trí: Hàm getMd5(String input) ở cuối file.
++1
+
+
+Lưu ý: Nếu ông không mã hóa ở đây, khi MigrationService đổ dữ liệu vào SQL Server, mật khẩu sẽ ở dạng văn bản thuần (plain text) và ông sẽ không bao giờ đăng nhập được bằng các tài khoản mẫu này vì LoginServlet luôn so sánh bằng mã Hash MD5.
++1
+
+💡 Lưu ý về tính đồng bộ:
+Ông cần đảm bảo thuật toán mã hóa ở cả 3 file này là giống hệt nhau (cùng dùng MD5 như hiện tại). Nếu một file dùng MD5, một file dùng SHA-256 thì hệ thống sẽ bị lệch và không thể xác thực người dùng được.
+
+Ông có muốn tôi gom hàm getMd5 này vào một file SecurityUtils.java riêng trong gói util để dùng chung cho gọn, đỡ phải copy-paste ở nhiều Servlet không?
+
+Bạn đã nói
+h CHƯA SỬA CODE, NẾU h đăng kì 1 tài khoản tên ccg@gmail.com, mật khẩu và các thông tin để 22 hết, thì check trong databse thế nào
+
+Gemini đã nói
+Để kiểm tra tài khoản ông vừa đăng ký trong database, ông mở SQL Server Management Studio (SSMS), kết nối vào DB ShopeeDB (hoặc tên DB ông đặt trong DBContext) và chạy câu lệnh Query sau:
+
+SQL
+SELECT * FROM Users WHERE email = 'ccg@gmail.com';
+Vì ông chưa sửa code và dùng thông tin như ông mô tả, đây là những gì ông sẽ thấy trong các cột:
+
+1. Cột password_hash
+Ông sẽ không thấy số "22" đâu. Vì trong RegisterServlet.java của ông đã có dòng:
+String passHash = getMd5(pass);
+Nên cột này sẽ hiển thị mã MD5 của chuỗi "22".
+
+Mã MD5 của "22" là: b6d767d2f8ed5d21a44b0e5886680cb9
+
+Nếu ông thấy đúng dãy chữ số loằng ngoằng này thì nghĩa là hàm mã hóa đang chạy chuẩn.
+
+2. Cột is_verified
+Cột này chắc chắn sẽ là 0.
+
+Vì trong hàm signup của UserDAO, ông đang để mặc định giá trị là 0.
+
+Hệ quả: Ông sẽ không đăng nhập được ngay lúc này. Nếu ông thử đăng nhập, LoginServlet sẽ trả về lỗi "Sai email hoặc mật khẩu" vì hàm login của ông có điều kiện WHERE is_verified = 1.
+
+3. Cột token
+Sẽ là một dãy mã dài (UUID) ví dụ: 550e8400-e29b-41d4-a716-446655440000.
+
+Cái mã này chính là cái đuôi trong link xác thực gửi vào mail.
+
+Cách để đăng nhập được ngay (nếu chưa cấu hình xong Email):
+Nếu ông muốn "ăn gian" để test đăng nhập luôn mà không cần click vào mail, ông chạy câu lệnh Update này trong SQL:
+
+SQL
+UPDATE Users SET is_verified = 1 WHERE email = 'ccg@gmail.com';
+Sau khi chạy dòng này, ông quay lại trang login.jsp, nhập email ccg@gmail.com và pass 22 là sẽ vào được trang Home!
+
+Ông kiểm tra thử trong SQL xem cột password_hash có đúng là dãy b6d767... không nhé?
+
+Bạn đã nói
+Sao ko hiện nhể, code này đã bổ sung cái j để xem email có tồn tịa ko rồi à
+
+Gemini đã nói
+Trong ảnh SQL của ông, kết quả không hiện gì (trống trơn) là vì lệnh INSERT từ code chưa thực sự đổ được dữ liệu vào Database, hoặc do ông chưa chạy đúng Database (ShopeeDb vs guh).
+
+Dưới đây là lý do và cách fix để ông check được email tồn tại:
+
+1. Tại sao Database vẫn trống?
+Lỗi Compilation: Project của ông đang bị lỗi đỏ hàng loạt ở RegisterServlet và EmailService nên khi ông nhấn "Run", NetBeans sẽ chạy bản build cũ (không có code đăng ký) hoặc không chạy được luôn.
+
+Lỗi Transaction: Trong MigrationService.java, ông đang để conn.setAutoCommit(false). Nếu code gặp lỗi giữa chừng mà không gọi conn.commit(), toàn bộ dữ liệu sẽ bị rollback (xoá sạch).
+
+2. Code đã có gì để "xem email tồn tại" chưa?
+Trong file RegisterServlet.java ông gửi, ông đã gọi hàm kiểm tra:
+
+
+if (dao.checkEmailExist(email)) { ... } 
+
+NHƯNG, hàm này đang bị gạch đỏ vì trong file UserDAO.java của ông chưa có định nghĩa hàm này.
+
+3. Cách fix để kiểm tra Email tồn tại
+Ông copy đoạn code này dán vào class UserDAO.java thì lỗi đỏ ở Servlet mới hết, và lúc đó code mới chạy được xuống lệnh INSERT:
+
+Java
+// Thêm vào UserDAO.java
+public boolean checkEmailExist(String email) {
+    String sql = "SELECT * FROM Users WHERE email = ?";
+    try (Connection conn = getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return true; // Tìm thấy email -> Đã tồn tại
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false; // Không tìm thấy -> Chưa tồn tại
+}
+4. Cách check nhanh nhất bây giờ
+Để biết code có thực sự ghi được vào DB hay không, ông hãy làm 2 việc:
+
+Sửa lỗi đỏ: Thêm hàm trên vào UserDAO và add thư viện Mail vào project (để EmailService hết đỏ).
+
+Check SQL: Thay vì chỉ SELECT, ông thử chạy lệnh này trong SSMS để xem có bao nhiêu người dùng:
+SELECT COUNT(*) FROM Users;
+
+Ông thử thêm hàm đó vào UserDAO rồi Clean & Build lại project xem còn lỗi đỏ không nhé? Nếu hết lỗi đỏ thì nhấn đăng ký lại là SQL sẽ hiện kết quả ngay!
+
+Bạn đã nói
+H muốn test là phải dùng 1 email thực à
+
+Gemini đã nói
+Không nhất thiết phải dùng email thực ngay lập tức để test đâu ông nhé. Có 3 cách để ông có thể test tính năng đăng ký và đăng nhập mà không cần một email "chính chủ":
+
+1. Dùng Email "Ảo" và ép dữ liệu trong SQL (Nhanh nhất)
+Ông cứ nhập bừa một email đúng định dạng (ví dụ: test123@gmail.com) vào trang đăng ký. Sau đó, vì email này không có thật nên ông sẽ không nhận được mã xác thực.
+
+Cách xử lý: Mở SQL Server lên và chạy lệnh:
+UPDATE Users SET is_verified = 1 WHERE email = 'test123@gmail.com';
+
+Lúc này, tài khoản đó sẽ được coi là đã xác thực và ông có thể dùng nó để đăng nhập bình thường vào login.jsp.
+
+2. Dùng Dịch vụ Email Tạm thời (Temp Mail)
+Nếu ông muốn test xem code gửi mail của mình có chạy thật hay không (nhưng lười dùng Gmail cá nhân):
+
+Lên mạng search "10 minute mail" hoặc "Temp Mail".
+
+Lấy cái email đó điền vào trang đăng ký của ông.
+
+Nếu code EmailService của ông cấu hình đúng (đã có App Password), ông sẽ thấy mail xác nhận bay về hòm thư tạm đó trong vài giây.
+
+3. In link xác thực ra Console để Click
+Nếu ông không muốn gửi mail thật vì sợ tốn thời gian hoặc chưa fix xong lỗi thư viện Mail:
+
+Trong RegisterServlet.java, ngay sau dòng tạo token, ông thêm dòng này:
+System.out.println("Link xac thuc: http://localhost:8080/ShopeeWeb/verify?email=" + email + "&token=" + token);
+
+Khi nhấn đăng ký, ông nhìn vào cửa sổ Output/Console của NetBeans, copy cái link đó dán vào trình duyệt là tài khoản sẽ được kích hoạt ngay.
+
+Lưu ý quan trọng để Test thành công:
+Để bất kỳ cách nào ở trên chạy được, ông bắt buộc phải giải quyết cái lỗi đỏ ở UserDAO mà tôi đã nhắc:
+
+Phải thêm hàm checkEmailExist vào UserDAO.java. Nếu không có hàm này, khi ông nhấn nút "Đăng ký", Servlet sẽ chết đứng ở dòng 57 và không có dữ liệu nào được ghi vào SQL đâu.
+
+Ông đã thêm hàm checkEmailExist vào UserDAO chưa? Nếu rồi thì ông thử dùng cách 3 (in link ra Console) là test nhanh nhất đấy!
+
+Bạn đã nói
+kfijuwbajdygpnaioa@nespj.com code cheeck mail bừa này đi
+
+Gemini đã nói
+Chào ông, nếu ông dùng email "bừa" là kfijuwbajdygpnaioa@nespj.com để đăng ký, hệ thống sẽ vẫn xử lý bình thường trong code. Tuy nhiên, vì đây không phải email thực có quyền truy cập, ông sẽ gặp vấn đề ở bước xác thực.
+
+Dưới đây là cách để ông "vượt rào" xác thực với cái email bừa này để test:
+
+1. Sửa lại link xác thực thủ công
+Thay vì đợi email (vốn sẽ không bao giờ tới hòm thư của ông), ông có thể tự "chế" link xác thực dựa trên dữ liệu trong Database.
+
+Bước 1: Mở SQL Server, chạy lệnh: SELECT token FROM Users WHERE email = 'kfijuwbajdygpnaioa@nespj.com';
+
+Bước 2: Copy mã token đó và dán vào trình duyệt theo cấu trúc:
+http://localhost:8080/ShopeeWeb/verify?email=kfijuwbajdygpnaioa@nespj.com&token=MÃ_VỪA_COPY
+
+2. Ép xác thực bằng SQL (Nhanh nhất)
+Nếu ông không muốn mất công click link, hãy ép trạng thái tài khoản thành "đã xác thực" trực tiếp trong DB để đăng nhập được luôn:
+
+SQL
+UPDATE Users 
+SET is_verified = 1, token = NULL 
+WHERE email = 'kfijuwbajdygpnaioa@nespj.com';
+3. Những lỗi sẽ khiến việc dùng email này thất bại
+Dù ông dùng email thật hay bừa, nếu chưa sửa 2 chỗ này thì code vẫn sẽ "ngỏm":
+
+Lỗi checkEmailExist: Trong file RegisterServlet.java dòng 57 đang gọi hàm này nhưng trong UserDAO.java của ông chưa có. Ông phải thêm hàm này vào UserDAO thì dữ liệu mới được INSERT vào bảng.
+
+Lỗi EmailService: Vì ông dùng email bừa, khi Transport.send(message) chạy, Google Server có thể trả về lỗi Invalid Addresses vì email không tồn tại.
+
+Mẹo: Để không bị văng lỗi này khi test, ông có thể tạm thời comment (vô hiệu hóa) dòng Transport.send(message); trong file EmailService.java.
+
+
+Lời khuyên: Sau khi chạy lệnh UPDATE ở mục 2, ông quay lại trang login.jsp, nhập email này và mật khẩu ông đã đăng ký là vào được trang chủ ngay lập tức. 
+
+Ông đã chạy thử lệnh SELECT trong SQL để xem nó đã lưu được cái email bừa này chưa? Nếu chưa hiện gì tức là code RegisterServlet vẫn đang bị kẹt ở chỗ lỗi đỏ đấy!
+
+Bạn đã nói
+Msg 207, Level 16, State 1, Line 1
+
+Invalid column name 'is_verified'.
+
+Msg 207, Level 16, State 1, Line 1
+
+Invalid column name 'token'.
+
+này là sao nhể
+
+Gemini đã nói
+Lỗi này có nghĩa là trong bảng Users ở SQL Server của ông hiện đang thiếu 2 cột là is_verified và token.
+
+Dù trong code Java ông đã viết lệnh để INSERT và UPDATE vào hai cột này, nhưng thực tế cấu trúc bảng trong Database của ông chưa được cập nhật để chứa chúng, dẫn đến việc SQL Server báo lỗi "Invalid column name" (Tên cột không hợp lệ).
+
+Cách khắc phục (Chạy lệnh SQL)
+Ông hãy mở SQL Server Management Studio (SSMS), mở một cửa sổ New Query mới (đảm bảo đang chọn đúng database ShopeeDB hoặc guh) và chạy đoạn lệnh sau để thêm cột:
+
+SQL
+-- 1. Thêm cột is_verified (kiểu bit: 0 là chưa xác thực, 1 là đã xác thực)
+ALTER TABLE Users ADD is_verified BIT DEFAULT 0;
+
+-- 2. Thêm cột token để lưu mã xác thực gửi qua mail
+ALTER TABLE Users ADD token VARCHAR(255);
+
+-- 3. (Tùy chọn) Cập nhật các user cũ thành đã xác thực để không bị lỗi login
+UPDATE Users SET is_verified = 1;
+Tại sao lại bị lỗi này?
+
+Thiếu đồng bộ: Có thể lúc ông chạy file MigrationService hoặc tạo bảng thủ công ban đầu, ông chưa thêm hai trường này vào câu lệnh CREATE TABLE. 
+
+
+Dữ liệu mẫu: File DataGenerator.java của ông tạo ra file CSV cũng không có hai cột này, nên khi MigrationService đổ dữ liệu vào, SQL không biết nhét token và is_verified vào đâu. 
+
+Sau khi chạy lệnh xong:
+Ông quay lại NetBeans, thực hiện đăng ký lại với email kfijuwbajdygpnaioa@nespj.com.
+
+Lúc này, lệnh SELECT * FROM Users sẽ hiện ra đầy đủ thông tin kèm theo cột is_verified (là 0) và mã token.
+
+Ông chạy thử lệnh ALTER TABLE đó chưa? Nếu chạy xong mà vẫn báo lỗi, hãy chụp lại cấu trúc bảng (phần Columns) tôi xem hộ cho nhé.
+
+Would you like me to help you write the full CREATE TABLE script for all tables to ensure everything is perfectly synced with your Java code?
+
+Bạn đã nói
+Từ từ, cho code để in full ra cái shopeedb để check lại đi
+
+Gemini đã nói
+Để đảm bảo Database của ông khớp hoàn toàn với code Java hiện tại (đặc biệt là các cột is_verified, token và các bảng liên quan đến sản phẩm), ông hãy chạy đoạn script SQL dưới đây.
+
+Đoạn code này sẽ xóa các bảng cũ (nếu có) và tạo lại từ đầu để đảm bảo tính đồng bộ:
+
+SQL
+-- 1. Tạo Database (Nếu chưa có)
+-- CREATE DATABASE ShopeeDB;
+-- GO
+-- USE ShopeeDB;
+-- GO
+
+-- 2. Xóa các bảng cũ theo thứ tự để tránh lỗi khóa ngoại
+DROP TABLE IF EXISTS OrderItems;
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS ProductImages;
+DROP TABLE IF EXISTS ProductVariants;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Shops;
+DROP TABLE IF EXISTS Vouchers;
+DROP TABLE IF EXISTS Users;
+
+-- 3. Bảng Người dùng (Đã bổ sung is_verified và token)
+CREATE TABLE Users (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    full_name NVARCHAR(255),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    wallet DECIMAL(18, 2) DEFAULT 0,
+    password_hash VARCHAR(255) NOT NULL,
+    note NVARCHAR(MAX),
+    role VARCHAR(20) DEFAULT 'user', -- 'admin' hoặc 'user'
+    is_verified BIT DEFAULT 0,       -- 0: Chưa xác thực, 1: Đã xác thực
+    token VARCHAR(255)               -- Lưu mã UUID xác thực email
+);
+
+-- 4. Bảng Cửa hàng
+CREATE TABLE Shops (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    shop_name NVARCHAR(255),
+    rating DECIMAL(3, 2)
+);
+
+-- 5. Bảng Sản phẩm (Đã thêm price và image_url để khớp với Product.java)
+CREATE TABLE Products (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    shop_id INT FOREIGN KEY REFERENCES Shops(id),
+    name NVARCHAR(MAX),
+    description NVARCHAR(MAX),
+    price DECIMAL(18, 2) DEFAULT 0,
+    image_url VARCHAR(MAX)
+);
+
+-- 6. Bảng Biến thể sản phẩm (Màu sắc, Size, Giá riêng)
+CREATE TABLE ProductVariants (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    product_id INT FOREIGN KEY REFERENCES Products(id),
+    color NVARCHAR(50),
+    size NVARCHAR(50),
+    stock INT,
+    price DECIMAL(18, 2),
+    note NVARCHAR(MAX)
+);
+
+-- 7. Bảng Ảnh phụ sản phẩm (Dùng cho ProductDetailServlet)
+CREATE TABLE ProductImages (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    product_id INT FOREIGN KEY REFERENCES Products(id),
+    image_url VARCHAR(MAX)
+);
+
+-- 8. Bảng Đơn hàng
+CREATE TABLE Orders (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT FOREIGN KEY REFERENCES Users(id),
+    total_amount DECIMAL(18, 2),
+    created_at DATETIME DEFAULT GETDATE(),
+    note NVARCHAR(MAX)
+);
+
+-- 9. Bảng Chi tiết đơn hàng
+CREATE TABLE OrderItems (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    order_id INT FOREIGN KEY REFERENCES Orders(id),
+    variant_id INT FOREIGN KEY REFERENCES ProductVariants(id),
+    quantity INT,
+    price_at_purchase DECIMAL(18, 2)
+);
+
+-- 10. Bảng Voucher
+CREATE TABLE Vouchers (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    code VARCHAR(50) UNIQUE,
+    value DECIMAL(18, 2),
+    min_order DECIMAL(18, 2),
+    start_date DATE,
+    end_date DATE
+);
+Giải thích các điểm quan trọng để ông check code:
+IDENTITY(1,1): Giúp tự động tăng ID. Trong MigrationService, ông dùng lệnh RESEED để reset cái này về 0 trước khi import CSV.
+
+Cột role: Trong LoginServlet, ông check acc.getRole() để phân quyền Admin.
+
+Cột is_verified & token: Đây là 2 cột mà SQL của ông báo lỗi lúc nãy. Giờ đã được thêm vào bảng Users để phục vụ xác thực email.
+
+Liên kết ngoại (Foreign Key): Đảm bảo khi ông xóa một sản phẩm, các dữ liệu liên quan ở bảng ảnh hoặc variant cũng được xử lý (trong ProductDAO ông đã viết code xóa thủ công các bảng con trước khi xóa bảng cha).
+
+Sau khi chạy Script này:
+Ông nhấn Clean and Build lại project Java.
+
+Chạy file DataGenerator.java để tạo file CSV.
+
+Vào trang /admin-import để đổ dữ liệu vào các bảng mới này.
+
+Thử đăng ký tài khoản kfijuwbajdygpnaioa@nespj.com xem nó đã hiện trong bảng Users chưa nhé.
+
+Ông có muốn tôi tạo sẵn một tài khoản Admin mẫu bằng SQL luôn để ông vào test trang quản trị không?
+
+Bạn đã nói
+Ko, cứ đưa lệnh show toàn bộ databse ra thôi, do lâu quá nên quên, cần xem lại
+
+Gemini đã nói
+Tôi hiểu rồi, đôi khi lâu không đụng vào SQL cũng dễ quên mấy lệnh cơ bản. Để xem toàn bộ dữ liệu trong các bảng của ShopeeDB (nhằm kiểm tra xem tài khoản kfijuwbajdygpnaioa@nespj.com đã vào chưa), ông dùng các lệnh sau trong SSMS:
+
+1. Lệnh xem dữ liệu từng bảng (Quan trọng nhất)
+Ông bôi đen từng dòng này rồi nhấn F5 để chạy nhé:
+
+SQL
+-- Xem toàn bộ danh sách người dùng (Để check email, pass_hash, is_verified, token)
+SELECT * FROM Users;
+
+-- Xem danh sách sản phẩm (Để check xem MigrationService đã đổ data vào chưa)
+SELECT * FROM Products; [cite: 1]
+
+-- Xem các shop hiện có
+SELECT * FROM Shops; [cite: 1]
+
+-- Xem các đơn hàng đã tạo
+SELECT * FROM Orders; [cite: 1]
+2. Lệnh kiểm tra cấu trúc bảng (Xem tên cột có đúng không)
+Nếu ông muốn biết bảng Users đang có những cột nào, kiểu dữ liệu là gì (để xem có thiếu is_verified hay không), dùng lệnh này:
+
+SQL
+EXEC sp_help 'Users';
+3. Lệnh xem tất cả các bảng đang có trong Database
+Nếu ông quên mất mình đã tạo những bảng nào trong cái Database này:
+
+SQL
+SELECT name FROM sys.tables;
+4. Mẹo check nhanh tài khoản vừa đăng ký
+Thay vì kéo chuột tìm trong 10,000 users rác, ông dùng lệnh lọc này để xem đúng cái tài khoản ông đang test:
+
+SQL
+SELECT id, full_name, email, is_verified, token 
+FROM Users 
+WHERE email = 'kfijuwbajdygpnaioa@nespj.com';
+Lưu ý: * Nếu ông chạy lệnh SELECT * FROM Users mà cột password_hash hiện ra dãy số loằng ngoằng thì là do hàm getMd5 trong RegisterServlet đang chạy tốt.
+
+Nếu cột is_verified hiện là 0, ông không thể login. Hãy dùng lệnh UPDATE tôi đưa lúc nãy để kích hoạt tay nếu lười check mail.
+
+Ông chạy thử lệnh SELECT * FROM Users xem nó có ra cái email kfijuwbajdygpnaioa@nespj.com không? Nếu nó không ra dòng nào thì chắc chắn code Java của ông đang bị lỗi ở đoạn dao.signup đấy!
+
+Bạn đã nói
+Code i hết ra chừng này
+
+Gemini đã nói
+Để kiểm tra toàn bộ Database ShopeeDb và đảm bảo mọi thứ đang hoạt động đúng như logic trong code Java, ông có thể sử dụng các lệnh SQL dưới đây để xem nhanh dữ liệu và cấu trúc hệ thống:
+
+1. Xem dữ liệu toàn bộ các bảng chính
+Ông bôi đen và chạy từng dòng này để kiểm tra dữ liệu hiện có:
+
+SQL
+-- Kiểm tra danh sách người dùng (Quan trọng để check Register/Login)
+SELECT * FROM Users; 
+
+-- Kiểm tra danh sách sản phẩm và cửa hàng (Check Migration)
+SELECT * FROM Products;
+SELECT * FROM Shops;
+
+-- Kiểm tra các biến thể và ảnh sản phẩm (Check Product Detail)
+SELECT * FROM ProductVariants;
+SELECT * FROM ProductImages;
+
+-- Kiểm tra đơn hàng và Voucher
+SELECT * FROM Orders;
+SELECT * FROM Vouchers;
+2. Lệnh kiểm tra cấu trúc cột (Để tránh lỗi "Invalid column name")
+Nếu ông muốn biết chắc chắn bảng Users đã có cột is_verified và token chưa, hãy dùng lệnh này:
+
+SQL
+-- Hiển thị thông tin chi tiết các cột của bảng Users
+EXEC sp_help 'Users'; 
+3. Lệnh kiểm tra nhanh các bảng đang tồn tại
+Để xem danh sách tất cả các bảng ông đã tạo trong database hiện hành:
+
+SQL
+-- Liệt kê tất cả tên bảng trong database
+SELECT name FROM sys.tables; 
+💡 Một số lưu ý quan trọng khi check:
+Bảng Users: Nếu ông vừa chạy RegisterServlet mà SELECT * FROM Users không ra dòng nào, tức là code Java đang bị lỗi biên dịch (lỗi đỏ ở file UserDAO hoặc RegisterServlet) nên dữ liệu chưa được nạp vào.
+
+Lỗi Msg 207: Nếu lệnh SELECT báo lỗi Invalid column name 'is_verified', ông cần chạy lệnh ALTER TABLE Users ADD is_verified BIT DEFAULT 0; để thêm cột này vào DB.
+
+Đúng Database: Hãy đảm bảo thanh công sổ xuống ở góc trái phía trên của SSMS đang chọn đúng ShopeeDb (như trong ảnh image_85ed20.png của ông) chứ không phải master hay guh.
+
+Ông cứ chạy lệnh SELECT * FROM Users trước đi. Nếu nó hiện ra cái email kfijuwbajdygpnaioa@nespj.com với cột is_verified = 0 là hệ thống của ông đã chạy chuẩn 90% rồi đấy!
+
+Ông có muốn tôi gửi lại lệnh UPDATE để ông tự kích hoạt tài khoản đó luôn không?
+
+Bạn đã nói
+Ko cần login, chỉ cần in ra toàn bộ thông tin của cái databse thôi
+
+Gemini đã nói
+Để kiểm tra toàn bộ thông tin và trạng thái hiện tại của database ShopeeDb trong SQL Server, ông hãy copy và chạy đoạn script tổng hợp dưới đây. Đoạn này sẽ giúp ông xem nhanh cả dữ liệu trong các bảng và cấu trúc các cột (để biết chắc chắn có bị thiếu cột is_verified hay không). 
++1
+
+1. Xem dữ liệu trong tất cả các bảng
+Ông mở một cửa sổ New Query trong SSMS, đảm bảo trên thanh công cụ đã chọn đúng ShopeeDb và chạy lệnh sau: 
+
+SQL
+-- Chuyển sang dùng đúng database
+USE ShopeeDb;
+GO
+
+-- 1. Xem danh sách người dùng (Check xem đã có tài khoản mới chưa)
+SELECT * FROM Users;
+
+-- 2. Xem danh sách sản phẩm (Check xem Migration đã chạy chưa)
+SELECT * FROM Products;
+
+-- 3. Xem danh sách shop
+SELECT * FROM Shops;
+
+-- 4. Xem các biến thể sản phẩm (Màu sắc, size, giá)
+SELECT * FROM ProductVariants;
+
+-- 5. Xem ảnh phụ của sản phẩm
+SELECT * FROM ProductImages;
+
+-- 6. Xem đơn hàng và chi tiết đơn hàng
+SELECT * FROM Orders;
+SELECT * FROM OrderItems;
+
+-- 7. Xem danh sách Voucher
+SELECT * FROM Vouchers;
+2. Kiểm tra cấu trúc bảng Users (Để fix lỗi "Invalid column")
+Vì ông đang gặp lỗi không tìm thấy cột is_verified và token, hãy chạy lệnh này để xem bảng Users thực tế đang có những cột nào: 
++1
+
+SQL
+-- Cách 1: Xem chi tiết các cột và kiểu dữ liệu
+SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'Users';
+
+-- Cách 2: Lệnh nhanh của SQL Server
+EXEC sp_help 'Users';
+3. Phân tích kết quả để ông tự check:
+
+Nếu SELECT * FROM Users trả về kết quả trống: Tức là code Java RegisterServlet của ông chưa thực hiện lệnh INSERT thành công (thường do lỗi đỏ ở UserDAO). 
+
+
+Nếu lệnh sp_help không thấy cột is_verified: Ông phải chạy lệnh ALTER TABLE Users ADD is_verified BIT DEFAULT 0; để thêm cột này vào thì code Java mới chạy tiếp được. 
+
+
+Kiểm tra Database: Trong ảnh image_85ed20.png của ông, tôi thấy có cả database tên là guh và ShopeeDb. Ông hãy chắc chắn là file DBContext.java và MigrationService.java đang trỏ về cùng một tên database (ví dụ đều là ShopeeDb) để tránh việc kiểm tra một nơi nhưng code lại chạy ở nơi khác. 
++1
+
+Ông chạy lệnh SELECT * FROM Users xong thấy nó có hiện ra cột is_verified và token ở cuối không? Nếu không thấy tức là ông chưa thêm cột vào DB đâu!
+
+Bạn đã nói
+H check thế nào với cái mail bừa kia
+
+Gemini đã nói
+Để kiểm tra cái mail "bừa" kfijuwbajdygpnaioa@nespj.com trong tình trạng database hiện tại của ông, hãy thực hiện các bước sau:
+
+1. Kiểm tra xem dữ liệu đã vào chưa
+Ông mở SSMS, chọn database ShopeeDb và chạy lệnh sau:
+
+SQL
+SELECT * FROM Users WHERE email = 'kfijuwbajdygpnaioa@nespj.com';
+Nếu không ra kết quả: Do RegisterServlet của ông đang bị lỗi đỏ ở dòng 57 (dao.checkEmailExist) nên code bị dừng, chưa kịp INSERT vào SQL. Ông phải thêm hàm đó vào UserDAO rồi chạy lại Web.
+
+Nếu ra kết quả: Ông sẽ thấy cột is_verified là 0.
+
+2. Cách "xác thực" cái mail bừa này để Test
+Vì mail này không có thật, ông sẽ không bao giờ nhận được thư xác nhận để click. Để test đăng nhập, ông dùng "quyền Admin" trong SQL để kích hoạt nó:
+
+SQL
+UPDATE Users 
+SET is_verified = 1, token = NULL 
+WHERE email = 'kfijuwbajdygpnaioa@nespj.com';
+Sau khi chạy lệnh này, ông có thể dùng mail đó đăng nhập bình thường vào login.jsp.
+
+3. Đối chiếu cấu trúc Database thực tế
+Nhìn vào ảnh kết quả SELECT mới nhất của ông (image_85f7e6.png), tôi thấy một vấn đề nghiêm trọng:
+
+Cột bị thiếu: Bảng của ông hiện chỉ có đến cột role. Hai cột cực kỳ quan trọng là is_verified và token vẫn chưa có trong bảng thực tế.
+
+Hậu quả: Đây là lý do ông bị lỗi Msg 207: Invalid column name 'is_verified'. Code Java của ông cố ghi vào 2 cột này nhưng SQL bảo "không tìm thấy".
+
+4. Code SQL để ông in "Full" và Fix bảng
+Ông hãy chạy đoạn này để cập nhật bảng Users cho khớp hoàn toàn với code Java xác thực email:
+
+SQL
+USE ShopeeDb;
+GO
+
+-- 1. Thêm 2 cột còn thiếu vào bảng hiện tại
+ALTER TABLE Users ADD is_verified BIT DEFAULT 0;
+ALTER TABLE Users ADD token VARCHAR(255);
+GO
+
+-- 2. Xem lại toàn bộ bảng để chắc chắn đã có 2 cột mới ở cuối
+SELECT TOP 10 * FROM Users ORDER BY id DESC;
+Tóm lại: 1. Chạy lệnh ALTER TABLE ở trên trước.
+2. Fix lỗi đỏ ở UserDAO (thêm hàm checkEmailExist).
+3. Đăng ký lại bằng mail bừa đó, sau đó dùng lệnh UPDATE ở mục 2 là xong!
+
+Ông chạy thử lệnh ALTER TABLE chưa? Nếu chạy xong thì SELECT lại là sẽ thấy 2 cột mới hiện ra ngay.
+
+Bạn đã nói
+package controller;
+
+
+
+import dal.UserDAO;
+
+import java.io.IOException;
+
+import java.security.MessageDigest;
+
+import jakarta.servlet.ServletException;
+
+import jakarta.servlet.annotation.WebServlet;
+
+import jakarta.servlet.http.HttpServlet;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+
+
+@WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
+
+public class RegisterServlet extends HttpServlet {
+
+
+
+    // Hàm mã hóa MD5 (Copy y chang bên LoginServlet để khớp nhau)
+
+    private String getMd5(String input) {
+
+        try {
+
+            MessageDigest md = MessageDigest.getInstance("MD5");
+
+            byte[] messageDigest = md.digest(input.getBytes());
+
+            java.math.BigInteger no = new java.math.BigInteger(1, messageDigest);
+
+            String hashtext = no.toString(16);
+
+            while (hashtext.length() < 32) {
+
+                hashtext = "0" + hashtext;
+
+            }
+
+            return hashtext;
+
+        } catch (Exception e) {
+
+            return "";
+
+        }
+
+    }
+
+
+
+    // 1. Vào trang đăng ký
+
+    @Override
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+
+            throws ServletException, IOException {
+
+        request.getRequestDispatcher("register.jsp").forward(request, response);
+
+    }
+
+
+
+    // 2. Xử lý khi bấm nút Đăng ký
+
+    @Override
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+
+            throws ServletException, IOException {
+
+        
+
+        // Lấy dữ liệu từ form
+
+        String email = request.getParameter("email");
+
+        String fullname = request.getParameter("fullname");
+
+        String phone = request.getParameter("phone");
+
+        String pass = request.getParameter("password");
+
+        String rePass = request.getParameter("re-password");
+
+
+
+        // Validate cơ bản
+
+        if (!pass.equals(rePass)) {
+
+            request.setAttribute("mess", "Mật khẩu nhập lại không khớp!");
+
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+
+            return;
+
+        }
+
+
+
+        UserDAO dao = new UserDAO();
+
+        if (dao.checkEmailExist(email)) {
+
+            request.setAttribute("mess", "Email này đã được sử dụng!");
+
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+
+            return;
+
+        }
+
+
+
+        // Mã hóa pass và Lưu vào DB
+
+        String passHash = getMd5(pass);
+
+        dao.signup(email, passHash, fullname, phone);
+
+
+
+        // Chuyển về trang Login và báo thành công
+
+        request.setAttribute("mess", "Đăng ký thành công! Hãy đăng nhập.");
+
+        request.getRequestDispatcher("login.jsp").forward(request, response);
+
+    }
+
+} code như này thì có lỗi ko
+
+Gemini đã nói
+Code của ông về mặt logic cơ bản là chạy được, nhưng nếu so với yêu cầu xác thực email và cấu trúc Database ông vừa check ở các bước trước, thì code này đang bị thiếu và lỗi ở 3 điểm chính:
+
+1. Lỗi thiếu tham số Token (Lỗi đỏ chắc chắn xảy ra)
+Trong file UserDAO.java mà ông gửi lúc trước, hàm signup của ông nhận 5 tham số (có token). Tuy nhiên, trong code Servlet này ông chỉ truyền vào 4 tham số:
+
+Code hiện tại: dao.signup(email, passHash, fullname, phone);
+
+Lỗi: Nó sẽ báo lỗi "method signup in class UserDAO cannot be applied to given types" vì thiếu mất cái token.
+
+2. Thiếu logic tạo mã xác thực
+Vì ông muốn có xác thực email, Servlet này bắt buộc phải tạo ra một mã token ngẫu nhiên và gửi mail đi. Code hiện tại của ông đang bỏ qua bước này.
+
+3. Cách Fix Code hoàn chỉnh (Hết lỗi đỏ + Có gửi mail)
+Ông nên sửa lại hàm doPost như sau để khớp với UserDAO và EmailService của ông:
+
+Java
+@Override
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    
+    String email = request.getParameter("email");
+    String fullname = request.getParameter("fullname");
+    String phone = request.getParameter("phone");
+    String pass = request.getParameter("password");
+    String rePass = request.getParameter("re-password");
+
+    // 1. Kiểm tra mật khẩu
+    if (!pass.equals(rePass)) {
+        request.setAttribute("mess", "Mật khẩu nhập lại không khớp!");
+        request.getRequestDispatcher("register.jsp").forward(request, response);
+        return;
+    }
+
+    UserDAO dao = new UserDAO();
+    // 2. Kiểm tra email tồn tại (Nhớ thêm hàm này vào UserDAO như tôi dặn)
+    if (dao.checkEmailExist(email)) {
+        request.setAttribute("mess", "Email này đã được sử dụng!");
+        request.getRequestDispatcher("register.jsp").forward(request, response);
+        return;
+    }
+
+    // 3. XỬ LÝ CHÍNH: Tạo Token và Mã hóa Pass
+    String passHash = getMd5(pass);
+    String token = java.util.UUID.randomUUID().toString(); // Tạo mã token xác thực
+
+    // 4. Lưu vào DB (Đủ 5 tham số để không bị lỗi đỏ)
+    dao.signup(email, passHash, fullname, phone, token);
+
+    // 5. Gửi email xác thực bằng luồng riêng (Thread) để không làm chậm trang
+    new Thread(() -> {
+        try {
+            util.EmailService es = new util.EmailService();
+            es.sendEmail(email, token);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }).start();
+
+    // 6. Thông báo
+    request.setAttribute("mess", "Đăng ký thành công! Vui lòng check Gmail để kích hoạt tài khoản.");
+    request.getRequestDispatcher("login.jsp").forward(request, response);
+}
+Tóm lại, để code này chạy không lỗi:
+Bước 1: Thay hàm doPost bằng bản tôi vừa sửa ở trên.
+
+Bước 2: Phải thêm hàm checkEmailExist vào UserDAO.java.
+
+Bước 3: Chạy lệnh ALTER TABLE Users ADD is_verified BIT DEFAULT 0, token VARCHAR(255); trong SQL để có chỗ chứa dữ liệu.
+
+Ông sửa xong 3 bước này thì cái mail bừa kfijuwbajdygpnaioa@nespj.com của ông mới được ghi vào database thành công đấy. Thử luôn không ông?
+
+
 💡 Tổng kết: Để làm xong tính năng Category, bro đã phải đi một đường xuyên suốt từ Database -> Model -> DAO -> Controller -> View, và cuối cùng là bảo trì lại bộ Test Data (Simulator) để nó chạy khớp với kiến trúc mới. Giải thích được quy trình này thì 10 điểm trong tầm tay nhé bro!
